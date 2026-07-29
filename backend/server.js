@@ -50,20 +50,26 @@ app.use("/api/", globalLimiter);
 // ─── CORS ──────────────────────────────────────────────────────────────────────
 const allowedOrigins = [
   process.env.CLIENT_URL,
+  process.env.FRONTEND_URL,
   "http://localhost:5173",
   "http://localhost:3000",
-  "https://onepiece-fashion.vercel.app",
 ].filter(Boolean);
 
 app.use(
   cors({
-    origin: (origin, cb) => {
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-      cb(new Error("Not allowed by CORS"));
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.log("Blocked Origin:", origin);
+      console.log("Allowed Origins:", allowedOrigins);
+
+      return callback(new Error(`Origin ${origin} not allowed by CORS`));
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   }),
 );
 
@@ -144,9 +150,10 @@ process.on("unhandledRejection", (reason, promise) => {
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
   app.listen(PORT, () => {
-    console.log(`🚀 ONE PIECE Server running on port ${PORT}`);
     console.log(`🌐 Environment: ${process.env.NODE_ENV}`);
-    console.log(`📡 API: http://localhost:${PORT}/api`);
+    console.log(
+      `📡 API Base: ${process.env.CLIENT_URL || "Local Development"}`,
+    );
   });
 });
 
