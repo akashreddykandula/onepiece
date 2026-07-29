@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -30,9 +31,27 @@ export default function ProductCard({ product, index = 0 }) {
   if (!product) return null;
 
   const images = product.images || [];
-  const primary = getPrimaryImage(images);
-  const secondary = images[1]?.url || primary;
-  const currentImg = images[activeImageIdx]?.url || primary;
+
+  const orderedImages = [
+    ...images.filter((img) => img.isPrimary),
+    ...images.filter((img) => !img.isPrimary),
+  ];
+
+  const primary = orderedImages[0]?.url || "";
+  const secondary = orderedImages[1]?.url || primary;
+  const currentImg = orderedImages[activeImageIdx]?.url || primary;
+  useEffect(() => {
+    if (orderedImages.length <= 1) return;
+
+    // Pause autoplay while user is hovering
+    if (isHovered) return;
+
+    const interval = setInterval(() => {
+      setActiveImageIdx((prev) => (prev + 1) % orderedImages.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [orderedImages.length, isHovered]);
 
   const discount = getDiscount(product.price, product.comparePrice);
   const wishlisted = isWishlisted(product._id);
@@ -72,13 +91,17 @@ export default function ProductCard({ product, index = 0 }) {
   const handlePrevImage = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setActiveImageIdx((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+
+    setActiveImageIdx((prev) =>
+      prev === 0 ? orderedImages.length - 1 : prev - 1,
+    );
   };
 
   const handleNextImage = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setActiveImageIdx((prev) => (prev + 1) % images.length);
+
+    setActiveImageIdx((prev) => (prev + 1) % orderedImages.length);
   };
 
   return (
@@ -96,21 +119,29 @@ export default function ProductCard({ product, index = 0 }) {
         onMouseLeave={() => setIsHovered(false)}
       >
         <Link to={`/product/${product.slug}`} className="block w-full h-full">
-          <img
-            src={
-              isHovered && images.length > 1 && activeImageIdx === 0
-                ? secondary
-                : currentImg
-            }
-            alt={product.name}
-            loading="lazy"
-            className="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
-          />
+          <div className="relative w-full h-full overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={activeImageIdx}
+                src={currentImg}
+                alt={product.name}
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover object-center"
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{
+                  duration: 0.4,
+                  ease: [0.4, 0, 0.2, 1],
+                }}
+              />
+            </AnimatePresence>
+          </div>
         </Link>
 
         {/* --- DESKTOP SLIDING ARROWS (Plain Black Arrows) --- */}
         <AnimatePresence>
-          {images.length > 1 && isHovered && (
+          {orderedImages.length > 1 && isHovered && (
             <div className="hidden sm:flex absolute inset-x-2 top-1/2 -translate-y-1/2 justify-between pointer-events-none z-20">
               <motion.button
                 initial={{ opacity: 0, x: -8 }}
@@ -137,9 +168,9 @@ export default function ProductCard({ product, index = 0 }) {
         </AnimatePresence>
 
         {/* --- PAGINATION DOTS --- */}
-        {images.length > 1 && (
+        {orderedImages.length > 1 && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 z-20 pointer-events-none">
-            {images.slice(0, 5).map((_, idx) => (
+            {orderedImages.slice(0, 5).map((_, idx) => (
               <span
                 key={idx}
                 className={`h-1 rounded-full transition-all duration-300 ${
