@@ -19,7 +19,7 @@ import {
 } from "react-icons/fi";
 import { openSearch, toggleCart } from "@store/index";
 import { useAuth, useOutsideClick } from "@hooks/index";
-import { NAV_LINKS, SHOP_MENU } from "@constants";
+import { NAV_LINKS } from "@constants";
 import MegaMenu from "./MegaMenu";
 
 export default function Navbar() {
@@ -31,6 +31,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
 
@@ -351,31 +352,24 @@ export default function Navbar() {
               <div className="flex-1 overflow-y-auto px-5 py-5 space-y-6 overscroll-contain">
                 <div className="space-y-4">
                   <p className="text-[10px] uppercase font-extrabold tracking-widest text-gray-400 px-3">
-                    Explore Collections
+                    Menu
                   </p>
-
-                  {/* Render Categories on Mobile */}
-                  {SHOP_MENU.map((section) => (
-                    <div key={section.title} className="space-y-1">
-                      <p className="px-3 text-xs font-bold text-brand-900 uppercase tracking-wider">
-                        {section.title}
-                      </p>
-                      {section.links.map((item) => (
-                        <Link
-                          key={item.href}
-                          to={item.href}
-                          onClick={() => setMobileOpen(false)}
-                          className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-brand-50 hover:text-brand-900 transition-colors"
-                        >
-                          <span>{item.label}</span>
-                          <FiChevronRight size={15} className="text-gray-300" />
-                        </Link>
-                      ))}
-                    </div>
-                  ))}
+                  <div className="space-y-1">
+                    {NAV_LINKS.map((link) => (
+                      <Link
+                        key={link.label}
+                        to={link.mega ? "/collections" : link.href}
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-colors"
+                      >
+                        <span>{link.label}</span>
+                        <FiChevronRight size={15} className="text-gray-300" />
+                      </Link>
+                    ))}
+                  </div>
 
                   {/* Direct Static Nav Links */}
-                  <div className="pt-2 border-t border-gray-100 space-y-1">
+                  {/* <div className="pt-2 border-t border-gray-100 space-y-1">
                     {NAV_LINKS.filter((l) => !l.mega).map((link) => (
                       <Link
                         key={link.href}
@@ -387,7 +381,7 @@ export default function Navbar() {
                         <FiChevronRight size={15} className="text-gray-300" />
                       </Link>
                     ))}
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Account Navigation (Logged In) */}
@@ -406,7 +400,7 @@ export default function Navbar() {
                       <span>My Orders</span>
                     </Link>
 
-                    <Link
+                    {/* <Link
                       to="/wishlist"
                       onClick={() => setMobileOpen(false)}
                       className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-brand-50 hover:text-brand-800 transition-colors"
@@ -420,7 +414,7 @@ export default function Navbar() {
                           {user.wishlist.length}
                         </span>
                       )}
-                    </Link>
+                    </Link> */}
 
                     <Link
                       to="/profile"
