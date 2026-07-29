@@ -142,7 +142,7 @@ export default function Navbar() {
               to="/"
               className="flex flex-col items-center group shrink-0 min-w-0"
             >
-              <span className="font-display font-black text-lg sm:text-2xl md:text-3xl text-brand-900 leading-none tracking-tight group-hover:text-brand-800 transition-colors truncate text-[135%]">
+              <span className="font-display font-black text-3xl sm:text-3xl md:text-4xl text-brand-900 leading-none tracking-tight whitespace-nowrap group-hover:text-brand-800 transition-colors">
                 ONE<span className="text-brand-500">PIECE</span>
               </span>
               <span className="text-[8px] tracking-[0.3em] uppercase text-silver font-sans hidden md:block -mt-0.5">
