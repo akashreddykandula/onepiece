@@ -13,7 +13,7 @@ require("dotenv").config();
 const { errorHandler, notFound } = require("./middleware/errorMiddleware");
 
 const app = express();
-
+app.set("trust proxy", 1);
 // ─── Security Middleware ───────────────────────────────────────────────────────
 app.use(
   helmet({
@@ -98,7 +98,15 @@ const connectDB = async () => {
     process.exit(1);
   }
 };
+// 👇 ADD THIS HERE
 
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+
+    message: "ONE PIECE API is running 🚀",
+  });
+});
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/api/auth", authLimiter, require("./routes/authRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
@@ -150,10 +158,7 @@ process.on("unhandledRejection", (reason, promise) => {
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
   app.listen(PORT, () => {
-    console.log(`🌐 Environment: ${process.env.NODE_ENV}`);
-    console.log(
-      `📡 API Base: ${process.env.CLIENT_URL || "Local Development"}`,
-    );
+    console.log(`✅ Server running on port ${PORT}`);
   });
 });
 

@@ -400,22 +400,6 @@ export default function Navbar() {
                       <span>My Orders</span>
                     </Link>
 
-                    {/* <Link
-                      to="/wishlist"
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-brand-50 hover:text-brand-800 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <FiHeart size={17} className="text-gray-400" />
-                        <span>Wishlist</span>
-                      </div>
-                      {user.wishlist?.length > 0 && (
-                        <span className="bg-red-500 text-white text-[11px] px-2 py-0.5 rounded-full font-bold shadow-xs">
-                          {user.wishlist.length}
-                        </span>
-                      )}
-                    </Link> */}
-
                     <Link
                       to="/profile"
                       onClick={() => setMobileOpen(false)}

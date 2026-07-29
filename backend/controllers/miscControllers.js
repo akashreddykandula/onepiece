@@ -20,8 +20,6 @@ const emailService = require("../services/emailService");
 
 // ─── Category ─────────────────────────────────────────────────────────────────
 exports.getCategories = async (req, res) => {
-  // console.log("Query Params:", req.query);
-
   const { includeSubcategories = true, featured } = req.query;
 
   const query = { isActive: true, parent: null };
@@ -36,15 +34,6 @@ exports.getCategories = async (req, res) => {
           parent: cat._id,
           isActive: true,
         }).sort({ sortOrder: 1 });
-
-        console.log(
-          "Category:",
-          cat.name,
-          "ID:",
-          cat._id.toString(),
-          "Subcategories found:",
-          subcategories.length,
-        );
 
         return {
           ...cat.toObject(),

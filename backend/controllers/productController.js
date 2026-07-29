@@ -67,7 +67,7 @@ exports.getProducts = async (req, res) => {
   if (sizes) query.sizes = { $in: sizes.split(",") };
   if (colors) query["colors.name"] = { $in: colors.split(",") };
   if (brand) query.brand = { $regex: brand, $options: "i" };
-  console.log(req.query);
+
   if (isFeatured === "true") query.isFeatured = true;
   if (isNewArrival === "true") query.isNewArrival = true;
   if (isBestSeller === "true") query.isBestSeller = true;
