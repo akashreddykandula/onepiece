@@ -164,8 +164,6 @@ productSchema.index({
 });
 productSchema.index({ category: 1, isActive: 1, isInStock: 1 });
 productSchema.index({ price: 1, isFeatured: 1, isNewArrival: 1 });
-productSchema.index({ slug: 1 });
-productSchema.index({ sku: 1 });
 productSchema.index({ createdAt: -1 });
 productSchema.index({ "reviewSummary.average": -1 });
 productSchema.index(
