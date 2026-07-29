@@ -19,7 +19,7 @@ import {
 } from "react-icons/fi";
 import { openSearch, toggleCart } from "@store/index";
 import { useAuth, useOutsideClick } from "@hooks/index";
-import { NAV_LINKS } from "@constants";
+import { NAV_LINKS, SHOP_MENU } from "@constants";
 import MegaMenu from "./MegaMenu";
 
 export default function Navbar() {
@@ -76,11 +76,11 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`sticky top-0 z-40 transition-all duration-300 ${
+        className={`sticky top-0 z-50 overflow-visible transition-all duration-300 ${
           scrolled ? "bg-white/95 backdrop-blur-md shadow-card" : "bg-white"
         }`}
       >
-        <div className="container-op px-3 sm:px-6">
+        <div className="container-op relative overflow-visible px-3 sm:px-6">
           <div className="flex items-center justify-between h-16 md:h-18 gap-2">
             {/* Left Section: Mobile Hamburger & Desktop Nav */}
             <div className="flex items-center gap-2 shrink-0">
@@ -99,7 +99,7 @@ export default function Navbar() {
                     return (
                       <div
                         key={link.label}
-                        className="relative"
+                        className="relative overflow-visible"
                         onMouseEnter={() => setMegaOpen(true)}
                         onMouseLeave={() => setMegaOpen(false)}
                       >
@@ -112,6 +112,7 @@ export default function Navbar() {
                           />
                         </button>
 
+                        {/* Render MegaMenu inside container to fix hover-gap bug */}
                         <AnimatePresence>
                           {megaOpen && <MegaMenu />}
                         </AnimatePresence>
@@ -149,9 +150,8 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* Right Action Icons (Search, Wishlist, Profile, Bag) */}
+            {/* Right Action Icons */}
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-              {/* Search Trigger */}
               <button
                 onClick={() => dispatch(openSearch())}
                 className="p-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all active:scale-95 flex items-center justify-center"
@@ -160,7 +160,6 @@ export default function Navbar() {
                 <FiSearch size={19} />
               </button>
 
-              {/* Wishlist Icon */}
               {user && (
                 <Link
                   to="/wishlist"
@@ -176,7 +175,7 @@ export default function Navbar() {
                 </Link>
               )}
 
-              {/* User Profile Dropdown Menu */}
+              {/* User Menu Dropdown */}
               <div
                 className={`relative ${user ? "hidden md:block" : "block"}`}
                 ref={userMenuRef}
@@ -281,7 +280,7 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
 
-              {/* Shopping Bag Icon Trigger */}
+              {/* Cart Drawer Toggle */}
               <button
                 onClick={() => dispatch(toggleCart())}
                 className="p-2 relative text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all active:scale-95 flex items-center justify-center"
@@ -304,11 +303,10 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Ultra-Premium Mobile Drawer */}
+      {/* Mobile Drawer */}
       <AnimatePresence>
         {mobileOpen && (
           <>
-            {/* Glassmorphic Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -318,16 +316,15 @@ export default function Navbar() {
               onClick={() => setMobileOpen(false)}
             />
 
-            {/* Menu Drawer */}
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 32, stiffness: 320 }}
-              className="fixed left-0 top-0 bottom-0 z-50 w-[88%] max-w-[360px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.2)] flex flex-col justify-between overflow-hidden"
+              className="fixed left-0 top-0 bottom-0 z-50 w-[88%] max-w-[360px] bg-white shadow-2xl flex flex-col justify-between overflow-hidden"
             >
-              {/* Drawer Top Bar */}
-              <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-white/80 backdrop-blur-sm">
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-white">
                 <Link
                   to="/"
                   onClick={() => setMobileOpen(false)}
@@ -350,44 +347,50 @@ export default function Navbar() {
                 </button>
               </div>
 
-              {/* Scrollable Navigation Body */}
+              {/* Drawer Content */}
               <div className="flex-1 overflow-y-auto px-5 py-5 space-y-6 overscroll-contain">
-                {/* Main Navigation links */}
-                <div className="space-y-1">
-                  <p className="text-[10px] uppercase font-extrabold tracking-widest text-gray-400 px-3 mb-2">
-                    Explore Collection
+                <div className="space-y-4">
+                  <p className="text-[10px] uppercase font-extrabold tracking-widest text-gray-400 px-3">
+                    Explore Collections
                   </p>
-                  {NAV_LINKS.filter((link) => !link.mega && link.href).map(
-                    (link) => {
-                      const active = isNavActive(link.href);
-                      return (
+
+                  {/* Render Categories on Mobile */}
+                  {SHOP_MENU.map((section) => (
+                    <div key={section.title} className="space-y-1">
+                      <p className="px-3 text-xs font-bold text-brand-900 uppercase tracking-wider">
+                        {section.title}
+                      </p>
+                      {section.links.map((item) => (
                         <Link
-                          key={link.href || link.label}
-                          to={link.href}
+                          key={item.href}
+                          to={item.href}
                           onClick={() => setMobileOpen(false)}
-                          className={`group relative flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-semibold transition-all ${
-                            active
-                              ? "bg-brand-50/80 text-brand-900 shadow-xs"
-                              : "text-gray-700 hover:bg-gray-50 hover:text-brand-900"
-                          }`}
+                          className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-brand-50 hover:text-brand-900 transition-colors"
                         >
-                          {active && (
-                            <span className="absolute left-0 top-2.5 bottom-2.5 w-1 bg-brand-500 rounded-r-full" />
-                          )}
-                          <span>{link.label}</span>
-                          <FiChevronRight
-                            size={16}
-                            className={`transition-transform duration-200 group-hover:translate-x-1 ${
-                              active ? "text-brand-600" : "text-gray-300"
-                            }`}
-                          />
+                          <span>{item.label}</span>
+                          <FiChevronRight size={15} className="text-gray-300" />
                         </Link>
-                      );
-                    },
-                  )}
+                      ))}
+                    </div>
+                  ))}
+
+                  {/* Direct Static Nav Links */}
+                  <div className="pt-2 border-t border-gray-100 space-y-1">
+                    {NAV_LINKS.filter((l) => !l.mega).map((link) => (
+                      <Link
+                        key={link.href}
+                        to={link.href}
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-colors"
+                      >
+                        <span>{link.label}</span>
+                        <FiChevronRight size={15} className="text-gray-300" />
+                      </Link>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Account Navigation (When Logged In) */}
+                {/* Account Navigation (Logged In) */}
                 {user && (
                   <div className="pt-4 border-t border-gray-100 space-y-1">
                     <p className="text-[10px] uppercase font-extrabold tracking-widest text-gray-400 px-3 mb-2">
@@ -442,11 +445,10 @@ export default function Navbar() {
                 )}
               </div>
 
-              {/* Bottom Footer Section */}
+              {/* Drawer Footer */}
               <div className="p-5 border-t border-gray-100 bg-gradient-to-b from-white to-gray-50/80">
                 {user ? (
                   <div className="space-y-3">
-                    {/* User Profile Card */}
                     <Link
                       to="/profile"
                       onClick={() => setMobileOpen(false)}
