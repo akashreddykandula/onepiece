@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Build folders
+dist/
+build/
+
+# Vite
+.vite/
+
+# Logs
+*.log
+logs/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Uploads (optional if generated locally)
+uploads/
+
+# Coverage
+coverage/
