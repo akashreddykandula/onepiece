@@ -49,11 +49,19 @@ app.use("/api/", globalLimiter);
 
 // ─── CORS ──────────────────────────────────────────────────────────────────────
 const allowedOrigins = [
-  process.env.CLIENT_URL,
-  process.env.FRONTEND_URL,
+  ...(process.env.CLIENT_URL || "")
+    .split(",")
+    .map((url) => url.trim())
+    .filter(Boolean),
+
+  ...(process.env.FRONTEND_URL || "")
+    .split(",")
+    .map((url) => url.trim())
+    .filter(Boolean),
+
   "http://localhost:5173",
   "http://localhost:3000",
-].filter(Boolean);
+];
 
 app.use(
   cors({
