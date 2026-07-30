@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useForm } from "react-hook-form";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   FiArrowLeft,
   FiSave,
@@ -27,6 +27,7 @@ import toast from "react-hot-toast";
 export default function AdminProductForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isEditing = !!id;
   const [images, setImages] = useState([]);
   const [uploadingImages, setUploadingImages] = useState(false);
@@ -104,10 +105,6 @@ export default function AdminProductForm() {
         lowStockThreshold: product.lowStockThreshold || 5,
       });
 
-      setTimeout(() => {
-        console.log(getValues());
-      }, 300);
-
       setImages(product.images || []);
       setSelectedSizes(product.sizes || []);
       setColors(product.colors || []);
@@ -117,8 +114,26 @@ export default function AdminProductForm() {
   const mutation = useMutation({
     mutationFn: (data) =>
       isEditing ? productAPI.update(id, data) : productAPI.create(data),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["products"],
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ["product"],
+        exact: false,
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ["featured-products"],
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ["new-arrivals"],
+      });
+
       toast.success(isEditing ? "Product updated!" : "Product created!");
+
       navigate("/admin/products");
     },
     onError: (err) => toast.error(err.response?.data?.message || "Save failed"),
@@ -242,8 +257,6 @@ export default function AdminProductForm() {
       prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
     );
   const onSubmit = (data) => {
-    console.log("FORM DATA:", data);
-
     mutation.mutate({
       ...data,
       images,

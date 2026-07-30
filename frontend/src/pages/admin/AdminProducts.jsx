@@ -34,7 +34,6 @@ export function AdminProducts() {
         limit: 20,
         isActive: isActiveFilter,
       });
-      console.log("API Response:", res.data);
       return res.data;
     },
     staleTime: 30000,

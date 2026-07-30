@@ -27,7 +27,6 @@ export function WishlistPage() {
         wishlistIds.slice(0, 20).map(async (id) => {
           try {
             const r = await productAPI.getOne(id);
-            console.log("Wishlist product:", id, r.data);
             return r.data.product;
           } catch (err) {
             console.error(
