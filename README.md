@@ -8,14 +8,14 @@ A production-ready, full-stack MERN e-commerce platform with premium UI, custom 
 
 ## 🚀 Tech Stack
 
-| Layer     | Tech |
-|-----------|------|
-| Frontend  | React 18, Vite, Tailwind CSS, Redux Toolkit, React Query, Framer Motion |
-| Backend   | Node.js, Express.js, MongoDB, Mongoose, JWT |
-| Payments  | Razorpay |
-| Storage   | Cloudinary |
-| Email     | Resend |
-| Deploy    | Frontend → Vercel · Backend → Render · DB → MongoDB Atlas |
+| Layer    | Tech                                                                    |
+| -------- | ----------------------------------------------------------------------- |
+| Frontend | React 18, Vite, Tailwind CSS, Redux Toolkit, React Query, Framer Motion |
+| Backend  | Node.js, Express.js, MongoDB, Mongoose, JWT                             |
+| Payments | Razorpay                                                                |
+| Storage  | Cloudinary                                                              |
+| Email    | Resend                                                                  |
+| Deploy   | Frontend → Vercel · Backend → Render · DB → MongoDB Atlas               |
 
 ---
 
@@ -94,7 +94,7 @@ Create `frontend/.env`:
 ```env
 VITE_API_URL=/api
 VITE_RAZORPAY_KEY=rzp_test_xxx
-VITE_WHATSAPP_NUMBER=919876543210
+VITE_WHATSAPP_NUMBER=9181212180990
 ```
 
 ### 4. Run Development
@@ -110,6 +110,7 @@ npm run dev
 ## 🌟 Features
 
 ### Customer
+
 - 🔐 JWT authentication (register, login, forgot/reset password)
 - 🏠 Premium homepage with hero slider, categories, sections
 - 🛍️ Collections with advanced filtering & sorting
@@ -124,6 +125,7 @@ npm run dev
 - 📱 Fully responsive (mobile-first)
 
 ### Admin
+
 - 📊 Dashboard with revenue charts, stats
 - 📦 Product management with CRUD
 - 🗂️ Category & subcategory management
@@ -143,6 +145,7 @@ npm run dev
 ## 🚀 Deployment
 
 ### Frontend (Vercel)
+
 ```bash
 cd frontend && npm run build
 # Deploy dist/ folder to Vercel
@@ -150,6 +153,7 @@ cd frontend && npm run build
 ```
 
 ### Backend (Render)
+
 ```
 Build Command: npm install
 Start Command: node server.js
@@ -160,14 +164,14 @@ Environment: Add all .env variables
 
 ## 🎨 Design System
 
-| Token | Value |
-|-------|-------|
-| Royal Blue | `#0A5ACB` |
+| Token         | Value     |
+| ------------- | --------- |
+| Royal Blue    | `#0A5ACB` |
 | Electric Blue | `#3B82F6` |
-| Deep Navy | `#0A2A80` |
-| Sky Blue | `#7AB2E4` |
-| Font Display | Syne |
-| Font Body | Inter |
+| Deep Navy     | `#0A2A80` |
+| Sky Blue      | `#7AB2E4` |
+| Font Display  | Syne      |
+| Font Body     | Inter     |
 
 ---
 

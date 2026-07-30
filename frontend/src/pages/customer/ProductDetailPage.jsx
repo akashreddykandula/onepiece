@@ -170,6 +170,7 @@ export default function ProductDetailPage() {
       size: selectedSize,
       color: selectedColor?.name || "",
       colorHex: selectedColor?.hex || "",
+      freeShipping: p.freeShipping,
       quantity,
     });
   };
@@ -670,14 +671,20 @@ export default function ProductDetailPage() {
             <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-auto">
               {[
                 {
-                  icon: FiTruck,
-                  label: "Free Shipping",
-                  sub: "Orders > ₹999",
+                  icon: FiShield,
+                  label: p.freeShipping ? "Free Shipping" : "Paid Shipping",
+                  sub: p.freeShipping
+                    ? "Available for this product"
+                    : "Shipping charges apply",
                 },
                 {
                   icon: FiRefreshCw,
-                  label: "7-Day Returns",
-                  sub: "Easy returns",
+                  label: p.isReturnable
+                    ? `${p.returnDays || 7}-Day Returns`
+                    : "Non-Returnable",
+                  sub: p.isReturnable
+                    ? "Easy returns"
+                    : "Returns not available",
                 },
                 {
                   icon: FiShield,
@@ -902,13 +909,21 @@ export default function ProductDetailPage() {
                         },
                         {
                           icon: FiShield,
-                          label: "Free Shipping",
-                          detail: "On orders above ₹999",
+                          label: p.freeShipping
+                            ? "Free Shipping"
+                            : "Paid Shipping",
+                          detail: p.freeShipping
+                            ? "Available for this product"
+                            : "Shipping charges apply",
                         },
                         {
                           icon: FiRefreshCw,
-                          label: "Easy Returns",
-                          detail: `${p.returnDays || 7} days return policy`,
+                          label: p.isReturnable
+                            ? "Easy Returns"
+                            : "Non-Returnable",
+                          detail: p.isReturnable
+                            ? `${p.returnDays || 7} days return policy`
+                            : "This product cannot be returned",
                         },
                       ].map(({ icon: Icon, label, detail }) => (
                         <div
@@ -931,11 +946,9 @@ export default function ProductDetailPage() {
                       Return Policy
                     </h3>
                     <p className="leading-relaxed text-gray-600">
-                      Items can be returned within {p.returnDays || 7} days of
-                      delivery. Products must be unworn, unwashed, and in
-                      original packaging with tags intact.
-                      {!p.isReturnable &&
-                        " This product is not eligible for return."}
+                      {p.isReturnable
+                        ? `Items can be returned within ${p.returnDays || 7} days of delivery. Products must be unworn, unwashed, and in their original packaging with tags intact.`
+                        : "This product is not eligible for returns."}
                     </p>
                   </div>
                 </div>

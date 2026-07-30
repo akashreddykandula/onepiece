@@ -50,6 +50,18 @@ export function AdminProducts() {
     },
     onError: () => toast.error("Failed to delete product"),
   });
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => productAPI.update(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: ["admin-products"],
+      });
+      toast.success("Product updated");
+    },
+    onError: () => {
+      toast.error("Failed to update product");
+    },
+  });
 
   return (
     <>
@@ -152,16 +164,58 @@ export function AdminProducts() {
                               {p.category?.name}
                             </p>
                             <div className="flex gap-1 mt-0.5">
-                              {p.isFeatured && (
-                                <span className="badge bg-brand-100 text-brand-700 text-[9px]">
-                                  Featured
-                                </span>
-                              )}
-                              {p.isNewArrival && (
-                                <span className="badge bg-green-100 text-green-700 text-[9px]">
-                                  New
-                                </span>
-                              )}
+                              <button
+                                onClick={() =>
+                                  updateMutation.mutate({
+                                    id: p._id,
+                                    data: {
+                                      isFeatured: !p.isFeatured,
+                                    },
+                                  })
+                                }
+                                className={`badge text-[9px] cursor-pointer transition-all hover:scale-105 ${
+                                  p.isFeatured
+                                    ? "bg-brand-100 text-brand-700"
+                                    : "bg-gray-100 text-gray-500"
+                                }`}
+                              >
+                                {p.isFeatured ? "Featured" : "Not Featured"}
+                              </button>
+                              <button
+                                onClick={() =>
+                                  updateMutation.mutate({
+                                    id: p._id,
+
+                                    data: {
+                                      isNewArrival: !p.isNewArrival,
+                                    },
+                                  })
+                                }
+                                className={`badge text-[9px] cursor-pointer transition-all hover:scale-105 ${
+                                  p.isNewArrival
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-gray-100 text-gray-500"
+                                }`}
+                              >
+                                {p.isNewArrival ? "New" : "Not New"}
+                              </button>
+                              <button
+                                onClick={() =>
+                                  updateMutation.mutate({
+                                    id: p._id,
+                                    data: {
+                                      isTrending: !p.isTrending,
+                                    },
+                                  })
+                                }
+                                className={`badge text-[9px] cursor-pointer transition-all hover:scale-105 ${
+                                  p.isTrending
+                                    ? "bg-orange-100 text-orange-700"
+                                    : "bg-gray-100 text-gray-500"
+                                }`}
+                              >
+                                {p.isTrending ? "Trending" : "Not Trending"}
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -180,11 +234,23 @@ export function AdminProducts() {
                         </span>
                       </td>
                       <td className="py-3 pr-4">
-                        <span
-                          className={`badge ${p.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}
+                        <button
+                          onClick={() =>
+                            updateMutation.mutate({
+                              id: p._id,
+                              data: {
+                                isActive: !p.isActive,
+                              },
+                            })
+                          }
+                          className={`badge cursor-pointer transition-all hover:scale-105 ${
+                            p.isActive
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-100 text-gray-500"
+                          }`}
                         >
                           {p.isActive ? "Active" : "Inactive"}
-                        </span>
+                        </button>
                       </td>
                       <td className="py-3 pr-4 text-gray-600">
                         {p.soldCount || 0}

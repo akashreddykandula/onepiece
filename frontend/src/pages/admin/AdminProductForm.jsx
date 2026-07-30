@@ -55,6 +55,7 @@ export default function AdminProductForm() {
     handleSubmit,
     reset,
     watch,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
@@ -72,7 +73,6 @@ export default function AdminProductForm() {
   );
 
   const subcategories = selectedCategoryData?.subcategories || [];
-
   useEffect(() => {
     if (product) {
       reset({
@@ -91,6 +91,8 @@ export default function AdminProductForm() {
         countryOfOrigin: product.countryOfOrigin,
         shippingDays: product.shippingDays,
         returnDays: product.returnDays,
+        freeShipping: product.freeShipping,
+        isReturnable: product.isReturnable,
         isActive: product.isActive,
         isFeatured: product.isFeatured,
         isNewArrival: product.isNewArrival,
@@ -101,6 +103,11 @@ export default function AdminProductForm() {
         metaDescription: product.metaDescription,
         lowStockThreshold: product.lowStockThreshold || 5,
       });
+
+      setTimeout(() => {
+        console.log(getValues());
+      }, 300);
+
       setImages(product.images || []);
       setSelectedSizes(product.sizes || []);
       setColors(product.colors || []);
@@ -234,8 +241,9 @@ export default function AdminProductForm() {
     setSelectedSizes((prev) =>
       prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
     );
-
   const onSubmit = (data) => {
+    console.log("FORM DATA:", data);
+
     mutation.mutate({
       ...data,
       images,
@@ -896,9 +904,6 @@ export default function AdminProductForm() {
                     <input
                       {...register(fid)}
                       type="checkbox"
-                      defaultChecked={
-                        fid === "isActive" || fid === "isReturnable"
-                      }
                       className="w-4 h-4 rounded text-brand-800 focus:ring-brand-500 border-gray-300 accent-brand-800 cursor-pointer"
                     />
                   </label>
