@@ -482,7 +482,8 @@ export default function CollectionsPage() {
     queryKey: ["products", queryParams],
     queryFn: () => productAPI.getAll(queryParams).then((r) => r.data),
     keepPreviousData: true,
-    staleTime: 1000 * 60 * 2,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const products = data?.products || [];

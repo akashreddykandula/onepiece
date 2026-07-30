@@ -80,7 +80,8 @@ export default function ProductDetailPage() {
     queryFn: () =>
       productAPI.getRelated(productData._id).then((r) => r.data.products),
     enabled: !!productData?._id,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const { data: reviewsData } = useQuery({
