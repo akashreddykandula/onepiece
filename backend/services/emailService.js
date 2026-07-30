@@ -1,16 +1,18 @@
-'use strict';
-const { Resend } = require('resend');
+"use strict";
+const { Resend } = require("resend");
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const FROM = process.env.RESEND_FROM_EMAIL || 'ONE PIECE <orders@onepiece.in>';
-const REPLY_TO = process.env.RESEND_REPLY_TO || 'support@onepiece.in';
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
+const FROM = process.env.RESEND_FROM_EMAIL || "ONE PIECE <orders@onepiece.in>";
+const REPLY_TO = process.env.RESEND_REPLY_TO || "onepiece.fashion99@gmail.com";
 
-const BLUE_DARK = '#0A2A80';
-const BLUE_PRIMARY = '#0A5ACB';
-const BLUE_ELECTRIC = '#3B82F6';
+const BLUE_DARK = "#0A2A80";
+const BLUE_PRIMARY = "#0A5ACB";
+const BLUE_ELECTRIC = "#3B82F6";
 
-const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
-const appUrl = () => process.env.CLIENT_URL || 'http://localhost:5173';
+const fmt = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
+const appUrl = () => process.env.CLIENT_URL || "http://localhost:5173";
 
 const baseTemplate = (content) => `
 <!DOCTYPE html><html lang="en">
@@ -42,7 +44,7 @@ const baseTemplate = (content) => `
   <div class="body">${content}</div>
   <div class="footer">
     <p>© ${new Date().getFullYear()} ONE PIECE Fashion. All rights reserved.</p>
-    <p><a href="${appUrl()}">onepiece.in</a> &nbsp;·&nbsp; <a href="mailto:support@onepiece.in">support@onepiece.in</a></p>
+    <p><a href="${appUrl()}">onepiece.in</a> &nbsp;·&nbsp; <a href="mailto:onepiece.fashion99@gmail.com">onepiece.fashion99@gmail.com</a></p>
   </div>
 </div></body></html>`;
 
@@ -52,9 +54,15 @@ async function sendEmail({ to, subject, html }) {
     return { skipped: true };
   }
   try {
-    return await resend.emails.send({ from: FROM, to, replyTo: REPLY_TO, subject, html });
+    return await resend.emails.send({
+      from: FROM,
+      to,
+      replyTo: REPLY_TO,
+      subject,
+      html,
+    });
   } catch (error) {
-    console.error('Email send failed:', error.message);
+    console.error("Email send failed:", error.message);
     return { error: error.message };
   }
 }
@@ -70,22 +78,30 @@ const emailService = {
       <hr class="divider">
       <p style="font-size:13px;color:#9CA3AF">Need help? Reply to this email anytime.</p>
     `);
-    return sendEmail({ to: user.email, subject: 'Welcome to ONE PIECE 🎉', html });
+    return sendEmail({
+      to: user.email,
+      subject: "Welcome to ONE PIECE 🎉",
+      html,
+    });
   },
 
   async sendOrderConfirmation(order) {
     const recipient = order.shippingAddress?.email || order.guestInfo?.email;
     if (!recipient) return;
 
-    const itemsHtml = order.items.map(item => `
+    const itemsHtml = order.items
+      .map(
+        (item) => `
       <div style="display:flex;gap:16px;padding:12px 0;border-bottom:1px solid #F3F4F6">
         <img src="${item.image}" width="60" height="72" style="object-fit:cover;border-radius:8px;flex-shrink:0" />
         <div style="flex:1">
           <p style="font-weight:600;font-size:14px;color:#111827;margin-bottom:4px">${item.name}</p>
-          <p style="font-size:12px;color:#6B7280">Qty: ${item.quantity}${item.size ? ` · ${item.size}` : ''}${item.color ? ` · ${item.color}` : ''}</p>
+          <p style="font-size:12px;color:#6B7280">Qty: ${item.quantity}${item.size ? ` · ${item.size}` : ""}${item.color ? ` · ${item.color}` : ""}</p>
           <p style="font-size:14px;font-weight:700;color:${BLUE_PRIMARY};margin-top:4px">${fmt(item.price * item.quantity)}</p>
         </div>
-      </div>`).join('');
+      </div>`,
+      )
+      .join("");
 
     const html = baseTemplate(`
       <span class="tag">Order Confirmed ✓</span>
@@ -94,38 +110,55 @@ const emailService = {
       ${itemsHtml}
       <hr class="divider">
       <div class="info-row"><span class="info-label">Subtotal</span><span class="info-value">${fmt(order.pricing.subtotal)}</span></div>
-      ${order.pricing.couponDiscount > 0 ? `<div class="info-row"><span class="info-label">Coupon Discount</span><span class="info-value" style="color:#22C55E">-${fmt(order.pricing.couponDiscount)}</span></div>` : ''}
+      ${order.pricing.couponDiscount > 0 ? `<div class="info-row"><span class="info-label">Coupon Discount</span><span class="info-value" style="color:#22C55E">-${fmt(order.pricing.couponDiscount)}</span></div>` : ""}
       <div class="info-row"><span class="info-label">Shipping</span><span class="info-value">${order.pricing.shippingCost === 0 ? '<span style="color:#22C55E">FREE</span>' : fmt(order.pricing.shippingCost)}</span></div>
       <div class="info-row"><span class="info-label">GST (${order.pricing.gstPercentage}%)</span><span class="info-value">${fmt(order.pricing.gst)}</span></div>
       <div class="info-row" style="border-top:2px solid #E5E7EB;padding-top:12px;margin-top:4px"><span style="font-size:16px;font-weight:700">Total</span><span style="font-size:18px;font-weight:800;color:${BLUE_PRIMARY}">${fmt(order.pricing.total)}</span></div>
       <hr class="divider">
       <p style="font-size:13px;color:#6B7280;margin-bottom:4px"><strong>Delivery to:</strong> ${order.shippingAddress.name}</p>
       <p style="font-size:13px;color:#6B7280">${order.shippingAddress.line1}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.pincode}</p>
-      <p style="font-size:13px;color:#22C55E;margin-top:8px">📦 Expected delivery: ${order.tracking?.estimatedDelivery ? new Date(order.tracking.estimatedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Within 7 business days'}</p>
+      <p style="font-size:13px;color:#22C55E;margin-top:8px">📦 Expected delivery: ${order.tracking?.estimatedDelivery ? new Date(order.tracking.estimatedDelivery).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "Within 7 business days"}</p>
       <center><a class="btn" href="${appUrl()}/orders/${order._id}">Track Your Order</a></center>
     `);
 
-    return sendEmail({ to: recipient, subject: `Order Confirmed #${order.orderNumber} | ONE PIECE`, html });
+    return sendEmail({
+      to: recipient,
+      subject: `Order Confirmed #${order.orderNumber} | ONE PIECE`,
+      html,
+    });
   },
 
   async sendOrderStatusUpdate(order, status, message) {
     const recipient = order.shippingAddress?.email || order.guestInfo?.email;
     if (!recipient) return;
 
-    const statusEmoji = { confirmed: '✅', packed: '📦', shipped: '🚚', out_for_delivery: '🛵', delivered: '🎉', cancelled: '❌' };
-    const emoji = statusEmoji[status] || '📋';
-    const label = status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const statusEmoji = {
+      confirmed: "✅",
+      packed: "📦",
+      shipped: "🚚",
+      out_for_delivery: "🛵",
+      delivered: "🎉",
+      cancelled: "❌",
+    };
+    const emoji = statusEmoji[status] || "📋";
+    const label = status
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
 
     const html = baseTemplate(`
       <span class="tag">${emoji} ${label}</span>
       <h2 style="font-size:22px;font-weight:700;color:${BLUE_DARK};margin:16px 0 8px">Your order has been ${label.toLowerCase()}</h2>
       <p style="font-size:14px;color:#4B5563;margin-bottom:16px">Order #${order.orderNumber}</p>
-      ${message ? `<p style="background:#EFF6FF;padding:16px;border-radius:8px;font-size:14px;color:#1E40AF;border-left:3px solid ${BLUE_PRIMARY}">${message}</p>` : ''}
-      ${order.tracking?.trackingNumber ? `<p style="font-size:14px;color:#374151;margin-top:12px">📍 Tracking Number: <strong>${order.tracking.trackingNumber}</strong>${order.tracking.courier ? ` (${order.tracking.courier})` : ''}</p>` : ''}
+      ${message ? `<p style="background:#EFF6FF;padding:16px;border-radius:8px;font-size:14px;color:#1E40AF;border-left:3px solid ${BLUE_PRIMARY}">${message}</p>` : ""}
+      ${order.tracking?.trackingNumber ? `<p style="font-size:14px;color:#374151;margin-top:12px">📍 Tracking Number: <strong>${order.tracking.trackingNumber}</strong>${order.tracking.courier ? ` (${order.tracking.courier})` : ""}</p>` : ""}
       <center><a class="btn" href="${appUrl()}/orders/${order._id}">View Order</a></center>
     `);
 
-    return sendEmail({ to: recipient, subject: `${emoji} Order ${label} | ONE PIECE #${order.orderNumber}`, html });
+    return sendEmail({
+      to: recipient,
+      subject: `${emoji} Order ${label} | ONE PIECE #${order.orderNumber}`,
+      html,
+    });
   },
 
   async sendPasswordReset(user, resetUrl) {
@@ -136,7 +169,11 @@ const emailService = {
       <hr class="divider">
       <p style="font-size:12px;color:#9CA3AF">If you didn't request this, ignore this email. Your password will remain unchanged.<br>For security, never share this link.</p>
     `);
-    return sendEmail({ to: user.email, subject: 'Reset Your ONE PIECE Password', html });
+    return sendEmail({
+      to: user.email,
+      subject: "Reset Your ONE PIECE Password",
+      html,
+    });
   },
 
   async sendShippingNotification(order) {
@@ -145,15 +182,23 @@ const emailService = {
     const html = baseTemplate(`
       <h2 style="font-size:22px;font-weight:700;color:${BLUE_DARK};margin-bottom:8px">Your order is on its way! 🚚</h2>
       <p style="font-size:14px;color:#4B5563;margin-bottom:20px">Order #${order.orderNumber} has been shipped.</p>
-      ${order.tracking?.trackingNumber ? `
+      ${
+        order.tracking?.trackingNumber
+          ? `
         <div style="background:#EFF6FF;padding:20px;border-radius:12px;text-align:center">
           <p style="font-size:12px;color:#6B7280;letter-spacing:1px;text-transform:uppercase">Tracking Number</p>
           <p style="font-size:24px;font-weight:800;color:${BLUE_PRIMARY};margin:8px 0">${order.tracking.trackingNumber}</p>
-          ${order.tracking.courier ? `<p style="font-size:13px;color:#4B5563">via ${order.tracking.courier}</p>` : ''}
-        </div>` : ''}
+          ${order.tracking.courier ? `<p style="font-size:13px;color:#4B5563">via ${order.tracking.courier}</p>` : ""}
+        </div>`
+          : ""
+      }
       <center><a class="btn" href="${appUrl()}/orders/${order._id}">Track Live</a></center>
     `);
-    return sendEmail({ to: recipient, subject: `Shipped! Your ONE PIECE order #${order.orderNumber} is on its way`, html });
+    return sendEmail({
+      to: recipient,
+      subject: `Shipped! Your ONE PIECE order #${order.orderNumber} is on its way`,
+      html,
+    });
   },
 
   async sendCouponToUser(user, coupon) {
@@ -164,14 +209,18 @@ const emailService = {
         <p style="font-size:12px;color:rgba(255,255,255,0.7);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Your Coupon Code</p>
         <p style="font-size:32px;font-weight:900;color:#FFFFFF;letter-spacing:4px">${coupon.code}</p>
         <p style="font-size:14px;color:rgba(255,255,255,0.8);margin-top:8px">
-          ${coupon.discountType === 'percentage' ? `${coupon.discountValue}% OFF` : `Flat ₹${coupon.discountValue} OFF`}
-          ${coupon.minOrderAmount ? ` on orders above ₹${coupon.minOrderAmount}` : ''}
+          ${coupon.discountType === "percentage" ? `${coupon.discountValue}% OFF` : `Flat ₹${coupon.discountValue} OFF`}
+          ${coupon.minOrderAmount ? ` on orders above ₹${coupon.minOrderAmount}` : ""}
         </p>
       </div>
-      <p style="font-size:12px;color:#9CA3AF;margin-top:12px">Valid until ${new Date(coupon.validUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+      <p style="font-size:12px;color:#9CA3AF;margin-top:12px">Valid until ${new Date(coupon.validUntil).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
       <center><a class="btn" href="${appUrl()}/collections">Shop Now</a></center>
     `);
-    return sendEmail({ to: user.email, subject: `${coupon.discountType === 'percentage' ? coupon.discountValue + '% OFF' : '₹' + coupon.discountValue + ' OFF'} — Exclusive Coupon | ONE PIECE`, html });
+    return sendEmail({
+      to: user.email,
+      subject: `${coupon.discountType === "percentage" ? coupon.discountValue + "% OFF" : "₹" + coupon.discountValue + " OFF"} — Exclusive Coupon | ONE PIECE`,
+      html,
+    });
   },
 };
 

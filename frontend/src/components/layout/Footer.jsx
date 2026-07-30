@@ -51,7 +51,7 @@ const socials = [
   { icon: FiFacebook, href: "#", label: "Facebook" },
   { icon: FiTwitter, href: "#", label: "Twitter" },
   { icon: FiYoutube, href: "#", label: "YouTube" },
-  { icon: FaWhatsapp, href: "https://wa.me/919876543210", label: "WhatsApp" },
+  { icon: FaWhatsapp, href: "https://wa.me/9181212180990", label: "WhatsApp" },
 ];
 
 const paymentBadges = [
@@ -181,13 +181,13 @@ export default function Footer() {
                 },
                 {
                   icon: FiPhone,
-                  text: "+91 98765 43210",
-                  href: "tel:+919876543210",
+                  text: "+91 81212 18099",
+                  href: "tel:+9181212180990",
                 },
                 {
                   icon: FiMail,
-                  text: "support@onepiece.in",
-                  href: "mailto:support@onepiece.in",
+                  text: "onepiece.fashion99@gmail.com",
+                  href: "mailto:onepiece.fashion99@gmail.com",
                 },
               ].map(({ icon: Icon, text, href }) => (
                 <div key={text} className="flex items-center gap-3 group">

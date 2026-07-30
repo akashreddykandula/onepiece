@@ -21,9 +21,9 @@ export default function AdminSettings() {
     defaultValues: {
       siteName: "ONE PIECE",
       tagline: "Your Statement. Your Style.",
-      supportEmail: "support@onepiece.in",
-      supportPhone: "+91 98765 43210",
-      whatsappNumber: "919876543210",
+      supportEmail: "onepiece.fashion99@gmail.com",
+      supportPhone: "+91 81212 18099",
+      whatsappNumber: "9181212180990",
       freeShippingAbove: 999,
       codEnabled: true,
     },
@@ -123,7 +123,7 @@ export default function AdminSettings() {
                 <input
                   {...regGeneral("whatsappNumber")}
                   className="input"
-                  placeholder="919876543210"
+                  placeholder="9181212180990"
                 />
               </div>
               <div>

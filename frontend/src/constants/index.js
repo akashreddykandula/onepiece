@@ -5,9 +5,9 @@ export const API_URL = import.meta.env.VITE_API_URL || "/api";
 export const APP_NAME = "ONE PIECE";
 export const APP_TAGLINE = "Your Statement. Your Style.";
 export const APP_URL = import.meta.env.VITE_APP_URL || "https://onepiece.in";
-export const SUPPORT_EMAIL = "support@onepiece.in";
+export const SUPPORT_EMAIL = "onepiece.fashion99@gmail.com";
 export const WHATSAPP_NUMBER =
-  import.meta.env.VITE_WHATSAPP_NUMBER || "919876543210";
+  import.meta.env.VITE_WHATSAPP_NUMBER || "9181212180990";
 
 // Razorpay
 export const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY || "";

@@ -154,7 +154,7 @@ export const lsRemove = (key) => {
 
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
 export const openWhatsApp = (message, number) => {
-  const num = number || import.meta.env.VITE_WHATSAPP_NUMBER || "919876543210";
+  const num = number || import.meta.env.VITE_WHATSAPP_NUMBER || "9181212180990";
   window.open(
     `https://wa.me/${num}?text=${encodeURIComponent(message)}`,
     "_blank",
