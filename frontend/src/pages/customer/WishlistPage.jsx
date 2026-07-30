@@ -9,8 +9,15 @@ import { useAuth } from "@hooks/index";
 import ProductGrid from "@components/product/ProductGrid";
 
 export function WishlistPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const wishlistIds = user?.wishlist || [];
+  if (authLoading) {
+    return (
+      <div className="container-op py-12">
+        <ProductGrid loading columns={4} />
+      </div>
+    );
+  }
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["wishlist-products", wishlistIds.join(",")],
