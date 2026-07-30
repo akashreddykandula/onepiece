@@ -81,6 +81,7 @@ export default function ProductDetailPage() {
       productAPI.getRelated(productData._id).then((r) => r.data.products),
     enabled: !!productData?._id,
     staleTime: 0,
+    //added
     refetchOnMount: "always",
   });
 
