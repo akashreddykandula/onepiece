@@ -24,12 +24,20 @@ export function WishlistPage() {
     queryFn: async () => {
       if (!wishlistIds.length) return [];
       const results = await Promise.all(
-        wishlistIds.slice(0, 20).map((id) =>
-          productAPI
-            .getOne(id)
-            .then((r) => r.data.product)
-            .catch(() => null),
-        ),
+        wishlistIds.slice(0, 20).map(async (id) => {
+          try {
+            const r = await productAPI.getOne(id);
+            console.log("Wishlist product:", id, r.data);
+            return r.data.product;
+          } catch (err) {
+            console.error(
+              "Wishlist failed:",
+              id,
+              err.response?.data || err.message,
+            );
+            return null;
+          }
+        }),
       );
       return results.filter(Boolean);
     },
