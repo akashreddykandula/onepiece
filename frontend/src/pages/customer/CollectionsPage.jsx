@@ -422,13 +422,10 @@ function FilterSection({ title, children }) {
 }
 
 export default function CollectionsPage() {
-  //  console.log("CollectionsPage render");
 
   useEffect(() => {
-    // console.log("CollectionsPage mounted");
 
     return () => {
-      //console.log("CollectionsPage unmounted");
     };
   }, []);
   const { cat } = useParams();
@@ -497,7 +494,6 @@ export default function CollectionsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["products", queryParams],
     queryFn: async () => {
-      //console.log("🔥 QUERY FUNCTION CALLED");
 
       const res = await productAPI.getAll(queryParams);
 

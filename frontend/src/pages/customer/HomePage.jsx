@@ -53,8 +53,6 @@ export default function HomePage() {
   const { data: featuredData, isLoading: featuredLoading } = useQuery({
     queryKey: ["products", "featured"],
     queryFn: async () => {
-      console.log("🔥 Fetching Featured Products");
-
       const res = await productAPI.getFeatured(8);
 
       return res.data.products;

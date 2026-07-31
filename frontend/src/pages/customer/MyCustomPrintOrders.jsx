@@ -55,15 +55,11 @@ export default function MyCustomPrintOrders({ orders = [] }) {
   });
 
   const handlePayment = async (order) => {
-    console.log("Pay button clicked");
-
-    console.log(order);
     try {
-      console.log("Calling createCustomPrintPayment...");
       const { data } = await paymentAPI.createCustomPrintPayment({
         customPrintOrderId: order._id,
       });
-      console.log("Payment API response:", data);
+
       const options = {
         key: data.keyId,
         amount: data.amount,
@@ -83,17 +79,9 @@ export default function MyCustomPrintOrders({ orders = [] }) {
               customPrintOrderId: order._id,
             });
 
-            console.log("Verify Response:", verify);
-            console.log("Verify Data:", verify.data);
-            console.log("Order ID:", verify.data.orderId);
-
             toast.success("Payment successful!");
             navigate(`/orders/${verify.data.orderId}`);
           } catch (err) {
-            console.log("Payment Error:", err);
-            console.log("Response:", err.response);
-            console.log("Response Data:", err.response?.data);
-
             toast.error(
               err.response?.data?.message || "Unable to initiate payment.",
             );
@@ -114,14 +102,6 @@ export default function MyCustomPrintOrders({ orders = [] }) {
       const razorpay = new window.Razorpay(options);
       razorpay.open();
     } catch (err) {
-      console.log("Payment creation failed");
-
-      console.log(err);
-
-      console.log(err.response);
-
-      console.log(err.response?.data);
-
       toast.error(err.response?.data?.message || "Unable to initiate payment.");
     }
   };
