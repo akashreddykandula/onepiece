@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useId } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -20,7 +20,6 @@ const footerLinks = {
   Shop: [
     { label: "Men's Collection", href: "/collections?category=men" },
     { label: "Women's Collection", href: "/collections?category=women" },
-    { label: "Kids' Collection", href: "/collections?category=kids" },
     {
       label: "New Arrivals",
       href: "/collections?isNewArrival=true",
@@ -40,18 +39,17 @@ const footerLinks = {
   ],
   Company: [
     { label: "About Us", href: "/pages/about" },
-    { label: "Careers", href: "/pages/careers" },
     { label: "Privacy Policy", href: "/pages/privacy" },
     { label: "Terms of Service", href: "/pages/terms" },
   ],
 };
 
 const socials = [
-  { icon: FiInstagram, href: "#", label: "Instagram" },
-  { icon: FiFacebook, href: "#", label: "Facebook" },
-  { icon: FiTwitter, href: "#", label: "Twitter" },
-  { icon: FiYoutube, href: "#", label: "YouTube" },
-  { icon: FaWhatsapp, href: "https://wa.me/9181212180990", label: "WhatsApp" },
+  { icon: FiInstagram, href: "https://instagram.com", label: "Instagram" },
+  { icon: FiFacebook, href: "https://facebook.com", label: "Facebook" },
+  { icon: FiTwitter, href: "https://twitter.com", label: "Twitter" },
+  { icon: FiYoutube, href: "https://youtube.com", label: "YouTube" },
+  { icon: FaWhatsapp, href: "https://wa.me/918121218099", label: "WhatsApp" },
 ];
 
 const paymentBadges = [
@@ -64,24 +62,52 @@ const paymentBadges = [
   "Paytm",
 ];
 
+const contactDetails = [
+  {
+    icon: FiMapPin,
+    text: "42 Fashion Street, Banjara Hills, Hyderabad – 500034",
+  },
+  {
+    icon: FiPhone,
+    text: "+91 81212 18099",
+    href: "tel:+918121218099", // Fixed 10-digit number mismatch
+  },
+  {
+    icon: FiMail,
+    text: "onepiece.fashion99@gmail.com",
+    href: "mailto:onepiece.fashion99@gmail.com",
+  },
+];
+
 export default function Footer() {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const emailInputId = useId();
 
   const handleNewsletter = async (e) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (!email.trim() || submitting) return;
+
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 800));
-    toast.success("You are subscribed! Welcome to the ONE PIECE family 🎉");
-    setEmail("");
-    setSubmitting(false);
+    try {
+      // Simulate API call
+      await new Promise((r) => setTimeout(r, 800));
+      toast.success("You are subscribed! Welcome to the ONE PIECE family 🎉");
+      setEmail("");
+    } catch {
+      toast.error("Subscription failed. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <footer className="bg-brand-900 text-white relative overflow-hidden border-t border-white/10 font-sans">
       {/* Background Lighting Glow Accent */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-80 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-800/40 via-transparent to-transparent pointer-events-none" />
+      <div
+        aria-hidden="true"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-80 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-800/40 via-transparent to-transparent pointer-events-none"
+      />
 
       {/* Newsletter Header Section */}
       <div className="relative border-b border-white/10 bg-brand-950/40 backdrop-blur-xl">
@@ -106,13 +132,18 @@ export default function Footer() {
                 onSubmit={handleNewsletter}
                 className="flex flex-col sm:flex-row w-full lg:w-[460px] gap-2 p-1.5 bg-white/5 border border-white/15 rounded-2xl backdrop-blur-md focus-within:border-brand-400 transition-all duration-300 shadow-2xl"
               >
+                <label htmlFor={emailInputId} className="sr-only">
+                  Email address
+                </label>
                 <input
+                  id={emailInputId}
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address"
                   required
-                  className="flex-1 px-4 py-3 bg-transparent text-white placeholder-white/40 text-xs sm:text-sm focus:outline-none"
+                  disabled={submitting}
+                  className="flex-1 px-4 py-3 bg-transparent text-white placeholder-white/40 text-xs sm:text-sm focus:outline-none disabled:opacity-50"
                 />
                 <button
                   type="submit"
@@ -121,6 +152,7 @@ export default function Footer() {
                 >
                   {submitting ? (
                     <motion.div
+                      aria-label="Submitting..."
                       className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
                       animate={{ rotate: 360 }}
                       transition={{
@@ -174,22 +206,7 @@ export default function Footer() {
             </p>
 
             <div className="space-y-3 pt-2">
-              {[
-                {
-                  icon: FiMapPin,
-                  text: "42 Fashion Street, Banjara Hills, Hyderabad – 500034",
-                },
-                {
-                  icon: FiPhone,
-                  text: "+91 81212 18099",
-                  href: "tel:+9181212180990",
-                },
-                {
-                  icon: FiMail,
-                  text: "onepiece.fashion99@gmail.com",
-                  href: "mailto:onepiece.fashion99@gmail.com",
-                },
-              ].map(({ icon: Icon, text, href }) => (
+              {contactDetails.map(({ icon: Icon, text, href }) => (
                 <div key={text} className="flex items-center gap-3 group">
                   <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0 group-hover:border-brand-400/50 transition-colors">
                     <Icon size={14} className="text-brand-400" />
@@ -277,7 +294,9 @@ export default function Footer() {
               <span className="text-white font-medium">ONE PIECE Fashion</span>.
               All rights reserved.
             </p>
-            <span className="hidden sm:inline text-white/20">•</span>
+            <span className="hidden sm:inline text-white/20" aria-hidden="true">
+              •
+            </span>
             <div className="flex items-center gap-2 text-xs text-white/50">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>All Systems Operational</span>
@@ -285,7 +304,10 @@ export default function Footer() {
           </div>
 
           {/* Payment Badges */}
-          <div className="flex items-center gap-1.5 flex-wrap justify-center">
+          <div
+            className="flex items-center gap-1.5 flex-wrap justify-center"
+            aria-label="Accepted Payment Methods"
+          >
             {paymentBadges.map((badge) => (
               <span
                 key={badge}

@@ -1,14 +1,10 @@
 import { lazy, Suspense, useEffect } from "react";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-  useParams,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { fetchMe } from "@store/index";
+
+// Scroll Reset Helper
 
 // Layout
 import CustomerLayout from "@components/layout/CustomerLayout";
@@ -18,6 +14,7 @@ import AdminLayout from "@components/layout/AdminLayout";
 import ProtectedRoute from "@components/common/ProtectedRoute";
 import AdminRoute from "@components/common/AdminRoute";
 import GuestRoute from "@components/common/GuestRoute";
+import ScrollToTop from "@components/common/ScrollToTop";
 
 // Preloader & Error Boundary
 import Preloader from "@components/common/Preloader";
@@ -25,7 +22,6 @@ import ErrorBoundary from "@components/common/ErrorBoundary";
 import PageLoader from "@components/ui/PageLoader";
 
 // Customer pages — lazy loaded
-
 const HomePage = lazy(() => import("@pages/customer/HomePage"));
 const CollectionsPage = lazy(() => import("@pages/customer/CollectionsPage"));
 const ProductDetailPage = lazy(
@@ -49,7 +45,6 @@ const ForgotPasswordPage = lazy(
 const MyCustomPrintOrders = lazy(
   () => import("@pages/customer/MyCustomPrintOrders"),
 );
-
 const ResetPasswordPage = lazy(
   () => import("@pages/customer/ResetPasswordPage"),
 );
@@ -83,10 +78,13 @@ function AppContent() {
   useEffect(() => {
     const token = localStorage.getItem("op_token");
     if (token) dispatch(fetchMe());
-  }, []);
+  }, [dispatch]);
 
   return (
     <BrowserRouter>
+      {/* 2. Placed inside BrowserRouter to catch all route changes */}
+      <ScrollToTop />
+
       <Preloader />
       <Toaster
         position="top-right"
@@ -117,7 +115,6 @@ function AppContent() {
             <Route path="collections/:cat" element={<CollectionsPage />} />
             <Route path="product/:slug" element={<ProductDetailPage />} />
             <Route path="search" element={<SearchPage />} />
-            {/* <Route path="custom-print" element={<CustomPrintPage />} /> */}
             <Route path="cart" element={<CartPage />} />
             <Route path="track-order" element={<TrackOrderPage />} />
             <Route path="pages/:slug" element={<CmsPage />} />

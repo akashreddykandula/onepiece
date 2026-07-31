@@ -321,7 +321,7 @@ function FilterPanel({
         </FilterSection>
 
         {/* Rating */}
-        <FilterSection title="Rating">
+        {/* <FilterSection title="Rating">
           <div className="space-y-2.5 pt-1">
             {[4, 3, 2].map((r) => {
               const isSelected = filters.rating === String(r);
@@ -370,7 +370,7 @@ function FilterPanel({
               );
             })}
           </div>
-        </FilterSection>
+        </FilterSection> */}
       </div>
 
       {/* Drawer Mobile Footer Apply Button */}
@@ -448,6 +448,14 @@ export default function CollectionsPage() {
       isOnSale: searchParams.get("isOnSale") || "",
       search: searchParams.get("q") || "",
     });
+  useEffect(() => {
+    if (gridRef.current) {
+      gridRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [filters]);
 
   useEffect(() => {
     const categoryMap = { men: "men", women: "women" };
@@ -479,7 +487,6 @@ export default function CollectionsPage() {
     ...(filters.supportsCustomPrint && {
       supportsCustomPrint: filters.supportsCustomPrint,
     }),
-    ...(filters.rating && { rating: filters.rating }),
     ...(filters.isOnSale && { isOnSale: filters.isOnSale }),
     ...(filters.isNewArrival && { isNewArrival: filters.isNewArrival }),
     ...(filters.isBestSeller && { isBestSeller: filters.isBestSeller }),
@@ -578,8 +585,7 @@ export default function CollectionsPage() {
     (filters.category ? 1 : 0) +
     (filters.subcategory ? 1 : 0) +
     (filters.inStock ? 1 : 0) +
-    (filters.supportsCustomPrint ? 1 : 0) +
-    (filters.rating ? 1 : 0);
+    (filters.supportsCustomPrint ? 1 : 0);
 
   return (
     <>
