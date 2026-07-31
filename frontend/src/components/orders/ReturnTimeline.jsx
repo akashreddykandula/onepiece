@@ -44,13 +44,9 @@ export default function ReturnTimeline({ status, timeline = [] }) {
         {RETURN_STEPS.map((step, index) => {
           const isFinalCompleted = status === "completed";
 
-          const completed =
-            !isRejected &&
-            (index < currentIndex ||
-              (isFinalCompleted && index === currentIndex));
+          const completed = !isRejected && index <= currentIndex;
 
-          const active =
-            !isRejected && index === currentIndex && !isFinalCompleted;
+          const active = false;
           const isLast = index === RETURN_STEPS.length - 1;
           const stepLog = timeline.find((t) => t.status === step.key);
 

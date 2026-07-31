@@ -28,6 +28,7 @@ export default function AdminOrders() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-orders", search, status, page, payment],
+
     queryFn: () =>
       orderAPI
         .getAllAdmin({
@@ -38,7 +39,7 @@ export default function AdminOrders() {
           paymentStatus: payment || undefined,
         })
         .then((r) => r.data),
-    staleTime: 30000,
+    staleTime: 0,
     keepPreviousData: true,
   });
 

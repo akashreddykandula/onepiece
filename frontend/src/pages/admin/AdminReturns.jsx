@@ -68,7 +68,7 @@ export default function AdminReturns() {
       returnAPI
         .getAll({ status: statusFilter || undefined })
         .then((r) => r.data),
-    staleTime: 30000,
+    staleTime: 0,
   });
 
   const updateMutation = useMutation({

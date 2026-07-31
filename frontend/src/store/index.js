@@ -4,7 +4,7 @@ import {
   createAsyncThunk,
 } from "@reduxjs/toolkit";
 import { authAPI } from "@services/api";
-
+import { socket } from "@services/socket";
 // ─── Auth Slice ───────────────────────────────────────────────────────────────
 const storedUser = JSON.parse(localStorage.getItem("op_user") || "null");
 const storedToken = localStorage.getItem("op_token") || null;
@@ -95,8 +95,11 @@ const authSlice = createSlice({
       state.loading = false;
       state.user = action.payload.user;
       state.token = action.payload.token;
+
       localStorage.setItem("op_token", action.payload.token);
       localStorage.setItem("op_user", JSON.stringify(action.payload.user));
+
+      socket.emit("userOnline", action.payload.user._id);
     };
     b.addCase(loginUser.pending, (s) => {
       s.loading = true;
@@ -119,6 +122,8 @@ const authSlice = createSlice({
       .addCase(fetchMe.fulfilled, (s, a) => {
         s.user = a.payload;
         localStorage.setItem("op_user", JSON.stringify(a.payload));
+
+        socket.emit("userOnline", a.payload._id);
       })
       .addCase(updateProfileThunk.fulfilled, (s, a) => {
         s.user = a.payload;

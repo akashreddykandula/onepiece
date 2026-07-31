@@ -422,6 +422,15 @@ function FilterSection({ title, children }) {
 }
 
 export default function CollectionsPage() {
+  //  console.log("CollectionsPage render");
+
+  useEffect(() => {
+    // console.log("CollectionsPage mounted");
+
+    return () => {
+      //console.log("CollectionsPage unmounted");
+    };
+  }, []);
   const { cat } = useParams();
   const [searchParams] = useSearchParams();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -480,12 +489,17 @@ export default function CollectionsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["products", queryParams],
-    queryFn: () => productAPI.getAll(queryParams).then((r) => r.data),
+    queryFn: async () => {
+      //console.log("🔥 QUERY FUNCTION CALLED");
+
+      const res = await productAPI.getAll(queryParams);
+
+      return res.data;
+    },
     keepPreviousData: true,
     staleTime: 0,
     refetchOnMount: "always",
   });
-
   const products = data?.products || [];
   const pagination = data?.pagination || {
     page: 1,
