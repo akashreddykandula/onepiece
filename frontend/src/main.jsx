@@ -22,100 +22,41 @@ const queryClient = new QueryClient({
 });
 
 const refreshProducts = async () => {
-  // Customer pages
-  await queryClient.invalidateQueries({
-    queryKey: ["products"],
-  });
-  await queryClient.refetchQueries({
-    queryKey: ["products"],
-    type: "active",
-  });
-  await queryClient.invalidateQueries({
-    queryKey: ["product"],
-  });
-  await queryClient.refetchQueries({
-    queryKey: ["product"],
-    type: "active",
-  });
-  //categories
-  await queryClient.invalidateQueries({
-    queryKey: ["categories"],
-  });
-  await queryClient.refetchQueries({
-    queryKey: ["categories"],
-    type: "active",
-  });
-  // Admin inventory
-  await queryClient.invalidateQueries({
-    queryKey: ["admin-inventory"],
-  });
-  await queryClient.refetchQueries({
-    queryKey: ["admin-inventory"],
-    type: "active",
-  });
-  // Orders
-  await queryClient.invalidateQueries({
-    queryKey: ["admin-orders"],
-  });
-  await queryClient.refetchQueries({
-    queryKey: ["admin-orders"],
-    exact: false,
-    type: "all",
-  });
-  await queryClient.invalidateQueries({
-    queryKey: ["admin-dashboard"],
-  });
-
-  await queryClient.refetchQueries({
-    queryKey: ["admin-dashboard"],
-    type: "active",
-  });
-  //order updates
-  await queryClient.invalidateQueries({
-    queryKey: ["order"],
-    exact: false,
-  });
-
-  await queryClient.refetchQueries({
-    queryKey: ["order"],
-    exact: false,
-    type: "active",
-  });
+  // invalidating automatically refetches all active queries matching the key
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: ["products"] }),
+    queryClient.invalidateQueries({ queryKey: ["product"] }),
+    queryClient.invalidateQueries({ queryKey: ["categories"] }),
+    queryClient.invalidateQueries({ queryKey: ["admin-inventory"] }),
+    queryClient.invalidateQueries({ queryKey: ["admin-orders"] }),
+    queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] }),
+    queryClient.invalidateQueries({ queryKey: ["order"] }),
+    queryClient.invalidateQueries({ queryKey: ["admin-returns"] }),
+  ]);
 };
 
-// Returns
-await queryClient.invalidateQueries({
-  queryKey: ["admin-returns"],
-  exact: false,
+// Socket Listeners
+socket.on("onlineUsersUpdated", () => {
+  queryClient.invalidateQueries({ queryKey: ["admin-dashboard"] });
 });
 
-await queryClient.refetchQueries({
-  queryKey: ["admin-returns"],
-  exact: false,
-  type: "active",
-});
-socket.on("onlineUsersUpdated", async () => {
-  await queryClient.invalidateQueries({
-    queryKey: ["admin-dashboard"],
-  });
+const productEvents = [
+  "productUpdated",
+  "productCreated",
+  "productDeleted",
+  "productStockUpdated",
+  "categoryCreated",
+  "categoryUpdated",
+  "categoryDeleted",
+  "orderUpdated",
+  "orderStatusUpdated",
+  "returnRequestCreated",
+  "returnStatusUpdated",
+];
 
-  await queryClient.refetchQueries({
-    queryKey: ["admin-dashboard"],
-    type: "active",
-  });
+productEvents.forEach((event) => {
+  socket.on(event, refreshProducts);
 });
-
-socket.on("productUpdated", refreshProducts);
-socket.on("productCreated", refreshProducts);
-socket.on("productDeleted", refreshProducts);
-socket.on("productStockUpdated", refreshProducts);
-socket.on("categoryCreated", refreshProducts);
-socket.on("categoryUpdated", refreshProducts);
-socket.on("categoryDeleted", refreshProducts);
-socket.on("orderUpdated", refreshProducts);
-socket.on("orderStatusUpdated", refreshProducts);
-socket.on("returnRequestCreated", refreshProducts);
-socket.on("returnStatusUpdated", refreshProducts);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
