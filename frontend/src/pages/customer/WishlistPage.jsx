@@ -10,7 +10,10 @@ import ProductGrid from "@components/product/ProductGrid";
 
 export function WishlistPage() {
   const { user, loading: authLoading } = useAuth();
-  const wishlistIds = user?.wishlist || [];
+  const wishlistIds = (user?.wishlist || []).map((item) => {
+    console.log("Wishlist Item:", item);
+    return typeof item === "object" ? item._id : item;
+  });
   if (authLoading) {
     return (
       <div className="container-op py-12">
