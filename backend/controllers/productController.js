@@ -2,7 +2,7 @@
 const Product = require("../models/Product");
 const Category = require("../models/Category");
 const { AppError } = require("../middleware/errorMiddleware");
-
+const { getIO } = require("../socket");
 // GET /api/products
 exports.getProducts = async (req, res) => {
   const {
@@ -239,7 +239,9 @@ exports.createProduct = async (req, res, next) => {
 
   await product.populate("category", "name slug");
   await product.populate("subcategory", "name slug");
-
+  getIO().emit("productCreated", {
+    productId: product._id,
+  });
   res.status(201).json({
     success: true,
     product,
@@ -248,16 +250,35 @@ exports.createProduct = async (req, res, next) => {
 
 // PUT /api/products/:id
 exports.updateProduct = async (req, res, next) => {
+  console.log("✏️ updateProduct called");
+
   const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
+
   if (!product) return next(new AppError("Product not found.", 404));
+
   await product.populate("category", "name slug");
   await product.populate("subcategory", "name slug");
-  res.json({ success: true, product });
-};
 
+  console.log("📦 Emitting productUpdated:", product._id);
+
+  getIO().emit("productUpdated", {
+    productId: product._id,
+  });
+
+  getIO().emit("productStockUpdated", {
+    productId: product._id,
+    stock: product.stock,
+    isInStock: product.isInStock,
+  });
+  console.log("✅ productUpdated emitted");
+  res.json({
+    success: true,
+    product,
+  });
+};
 // DELETE /api/products/:id
 exports.deleteProduct = async (req, res, next) => {
   const product = await Product.findByIdAndDelete(req.params.id);
@@ -268,6 +289,9 @@ exports.deleteProduct = async (req, res, next) => {
 
   await Category.findByIdAndUpdate(product.category, {
     $inc: { productCount: -1 },
+  });
+  getIO().emit("productDeleted", {
+    productId: product._id,
   });
 
   res.json({
@@ -329,5 +353,15 @@ exports.updateStock = async (req, res, next) => {
   }
 
   await product.save();
-  res.json({ success: true, product });
+  console.log("📦 Emitting productStockUpdated", {
+    productId: product._id,
+    stock: product.stock,
+    isInStock: product.isInStock,
+  });
+
+  getIO().emit("productStockUpdated", {
+    productId: product._id,
+    stock: product.stock,
+    isInStock: product.isInStock,
+  });
 };

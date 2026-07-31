@@ -3,6 +3,7 @@ require("express-async-errors");
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const { initSocket, onlineUsers, getOnlineUsersCount } = require("./socket");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -36,14 +37,41 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+initSocket(io);
 
 io.on("connection", (socket) => {
+  socket.on("userOnline", (userId) => {
+    if (!userId) return;
+
+    onlineUsers.set(userId.toString(), socket.id);
+
+    io.emit("onlineUsersUpdated", {
+      count: getOnlineUsersCount(),
+    });
+
+    console.log(`🟢 User ${userId} online (${getOnlineUsersCount()} total)`);
+  });
   console.log("🟢 Client connected:", socket.id);
 
-  socket.on("disconnect", () => {
-    console.log("🔴 Client disconnected:", socket.id);
+  socket.onAny((event, ...args) => {
+    console.log("📩 Client sent:", event, args);
+  });
+  socket.on("disconnect", (reason) => {
+    for (const [userId, socketId] of onlineUsers.entries()) {
+      if (socketId === socket.id) {
+        onlineUsers.delete(userId);
+        break;
+      }
+    }
+
+    io.emit("onlineUsersUpdated", {
+      count: getOnlineUsersCount(),
+    });
+
+    console.log("🔴 Client disconnected:", socket.id, reason);
   });
 });
+
 app.set("trust proxy", 1);
 // ─── Security Middleware ───────────────────────────────────────────────────────
 app.use(
@@ -76,10 +104,7 @@ const authLimiter = rateLimit({
   },
 });
 
-app.use("/api/", globalLimiter);
-
-// ─── CORS ──────────────────────────────────────────────────────────────────────
-
+//---------------- CORS -----------------------------------------
 app.use(
   cors({
     origin(origin, callback) {
@@ -89,14 +114,15 @@ app.use(
         return callback(null, true);
       }
 
-      console.log("Blocked Origin:", origin);
-      console.log("Allowed Origins:", allowedOrigins);
-
       return callback(new Error(`Origin ${origin} not allowed by CORS`));
     },
     credentials: true,
   }),
 );
+
+if (process.env.NODE_ENV !== "development") {
+  app.use("/api/", globalLimiter);
+}
 
 // ─── Body Parsing ──────────────────────────────────────────────────────────────
 app.use(express.json({ limit: "15mb" }));

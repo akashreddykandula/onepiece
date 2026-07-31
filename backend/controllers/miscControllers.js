@@ -17,6 +17,7 @@ const {
 } = require("../config/cloudinary");
 const { AppError } = require("../middleware/errorMiddleware");
 const emailService = require("../services/emailService");
+const { getIO, getOnlineUsersCount } = require("../socket");
 
 // ─── Category ─────────────────────────────────────────────────────────────────
 exports.getCategories = async (req, res) => {
@@ -73,16 +74,6 @@ exports.getCategory = async (req, res, next) => {
 exports.createCategory = async (req, res) => {
   const data = { ...req.body };
 
-  // Auto-generate slug
-  // if (data.name) {
-  //   data.slug = data.name
-  //     .replace(/collection/gi, "")
-  //     .replace(/'/g, "")
-  //     .trim()
-  //     .toLowerCase()
-  //     .replace(/\s+/g, "-");
-  // }
-
   // Determine level based on parent
   if (data.parent) {
     data.level = 1;
@@ -93,6 +84,10 @@ exports.createCategory = async (req, res) => {
 
   const category = await Category.create(data);
 
+  getIO().emit("categoryCreated", {
+    categoryId: category._id,
+  });
+
   res.status(201).json({
     success: true,
     category,
@@ -101,23 +96,15 @@ exports.createCategory = async (req, res) => {
 exports.updateCategory = async (req, res, next) => {
   const data = { ...req.body };
 
-  // Auto-update slug when category name changes
-  // if (data.name) {
-  //   data.slug = data.name
-  //     .replace(/collection/gi, "")
-  //     .replace(/'/g, "")
-  //     .trim()
-  //     .toLowerCase()
-  //     .replace(/\s+/g, "-");
-  // }
-
   const category = await Category.findByIdAndUpdate(req.params.id, data, {
     new: true,
     runValidators: true,
   });
 
   if (!category) return next(new AppError("Category not found.", 404));
-
+  getIO().emit("categoryUpdated", {
+    categoryId: category._id,
+  });
   res.json({
     success: true,
     category,
@@ -157,7 +144,9 @@ exports.deleteCategory = async (req, res, next) => {
   }
 
   await Category.findByIdAndDelete(category._id);
-
+  getIO().emit("categoryDeleted", {
+    categoryId: category._id,
+  });
   res.json({
     success: true,
     message: "Category deleted successfully.",
@@ -414,6 +403,7 @@ exports.getDashboard = async (req, res) => {
       totalOrders,
       monthOrders: monthlyRevenueData[0]?.count || 0,
       totalUsers,
+      onlineUsers: getOnlineUsersCount(),
       totalProducts,
       pendingOrders,
       returnsCount,
@@ -541,6 +531,11 @@ exports.createReturn = async (req, res, next) => {
     message: "Return requested by customer.",
   });
   await order.save();
+  console.log("📦 Emitting returnRequestCreated", returnRequest._id);
+
+  getIO().emit("returnRequestCreated", {
+    returnRequestId: returnRequest._id,
+  });
   res.status(201).json({ success: true, return: returnRequest });
 };
 
@@ -613,6 +608,12 @@ exports.updateReturnStatus = async (req, res, next) => {
     timestamp: new Date(),
   });
   await returnReq.save();
+  console.log("📦 Emitting returnStatusUpdated", returnReq._id);
+
+  getIO().emit("returnStatusUpdated", {
+    returnId: returnReq._id,
+    orderId: returnReq.order,
+  });
   if (!returnReq) return next(new AppError("Return request not found.", 404));
   if (status === "completed") {
     await Order.findByIdAndUpdate(returnReq.order, {
@@ -623,6 +624,10 @@ exports.updateReturnStatus = async (req, res, next) => {
           message: "Return completed and refund initiated.",
         },
       },
+    });
+
+    getIO().emit("orderUpdated", {
+      orderId: returnReq.order,
     });
   }
   res.json({ success: true, return: returnReq });

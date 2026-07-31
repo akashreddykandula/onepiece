@@ -6,6 +6,7 @@ const { Coupon, Notification, Return } = require("../models/index");
 const User = require("../models/User");
 const { AppError } = require("../middleware/errorMiddleware");
 const emailService = require("../services/emailService");
+const { getIO } = require("../socket");
 
 // POST /api/orders
 exports.createOrder = async (req, res, next) => {
@@ -158,7 +159,10 @@ exports.createOrder = async (req, res, next) => {
       { status: "pending", message: "Order placed and awaiting payment." },
     ],
   });
-
+  console.log("📦 Emitting orderCreated", order._id);
+  getIO().emit("orderCreated", {
+    orderId: order._id,
+  });
   res.status(201).json({ success: true, order });
 };
 
@@ -249,6 +253,15 @@ exports.finalizeOrder = async (orderId, paymentData) => {
 
     await order.save({ session });
     await session.commitTransaction();
+    console.log("📦 Emitting orderUpdated", order._id);
+
+    getIO().emit("orderUpdated", {
+      orderId: order._id,
+    });
+
+    getIO().emit("productStockUpdated", {
+      orderId: order._id,
+    });
     session.endSession();
 
     // Async side-effects (Email & Notifications) after transaction commits
@@ -435,6 +448,16 @@ exports.cancelOrder = async (req, res, next) => {
     });
     await order.save();
 
+    console.log("📦 Emitting productStockUpdated", order._id);
+
+    getIO().emit("productStockUpdated", {
+      orderId: order._id,
+    });
+
+    getIO().emit("orderUpdated", {
+      orderId: order._id,
+    });
+
     emailService
       .sendOrderStatusUpdate(order, "cancelled", reason)
       .catch(console.error);
@@ -539,7 +562,11 @@ exports.updateOrderStatus = async (req, res, next) => {
     if (status === "delivered") order.tracking.deliveredAt = new Date();
 
     await order.save();
+    console.log("📦 Emitting orderStatusUpdated", order._id);
 
+    getIO().emit("orderStatusUpdated", {
+      orderId: order._id,
+    });
     // User Notifications with dynamic wording
     if (order.user) {
       const notifMsg = {
