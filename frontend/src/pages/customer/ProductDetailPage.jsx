@@ -270,7 +270,6 @@ export default function ProductDetailPage() {
       <div className="container-op py-4 sm:py-8 px-4">
         <div className="grid md:grid-cols-12 gap-6 sm:gap-10 lg:gap-16 items-start">
           {/* ── Image Gallery ── */}
-          {/* Change from flex flex-col md:flex-row to add md:col-span-5 */}
           <div className="md:col-span-5 flex flex-col md:flex-row gap-3 sm:gap-4">
             {/* Desktop Side Thumbnails */}
             <div className="hidden md:flex flex-col gap-2.5 w-20 shrink-0">
@@ -295,7 +294,6 @@ export default function ProductDetailPage() {
 
             {/* Main Image View Card */}
             <div className="flex-1 min-w-0">
-              {/* Aspect-[3/4] allows portrait fashion images to display completely without cropping */}
               <div className="relative group rounded-2xl sm:rounded-3xl overflow-hidden bg-gray-100 aspect-[3/4] w-full">
                 <div
                   ref={scrollContainerRef}
@@ -337,7 +335,7 @@ export default function ProductDetailPage() {
                   ))}
                 </div>
 
-                {/* Arrow Controls - HIDDEN ON MOBILE (hidden md:flex) */}
+                {/* Arrow Controls */}
                 {images.length > 1 && (
                   <>
                     <button
@@ -420,7 +418,6 @@ export default function ProductDetailPage() {
           </div>
 
           {/* ── Product Details Info ── */}
-          {/* Add md:col-span-7 */}
           <motion.div
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -432,9 +429,6 @@ export default function ProductDetailPage() {
               <span className="text-xs font-bold text-brand-600 tracking-widest uppercase">
                 {p.brand}
               </span>
-              {/* <span className="text-[11px] text-gray-400 font-mono">
-                SKU: {p.sku}
-              </span> */}
             </div>
 
             <h1 className="font-display font-bold text-xl sm:text-2xl md:text-3xl text-brand-950 leading-snug mb-2 sm:mb-3">
@@ -711,30 +705,26 @@ export default function ProductDetailPage() {
           </motion.div>
         </div>
 
-        {/* ── Product Tabs ── */}
-        <div className="mt-10 sm:mt-16">
-          <div className="flex border-b border-gray-200 overflow-x-auto no-scrollbar">
+        {/* ── Product Tabs (Boxy Layout) ── */}
+        <div className="mt-10 sm:mt-16 border border-gray-200 rounded-2xl bg-white p-3 sm:p-6 shadow-sm">
+          {/* Boxy Tab Navigation Header */}
+          <div className="flex gap-2 p-1.5 bg-gray-100 rounded-xl border border-gray-200 overflow-x-auto no-scrollbar">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 sm:px-6 py-3 text-xs sm:text-sm font-bold whitespace-nowrap transition-all relative ${
+                className={`flex-1 min-w-[120px] px-4 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all text-center whitespace-nowrap ${
                   activeTab === tab.id
-                    ? "text-brand-900"
-                    : "text-gray-400 hover:text-gray-600"
+                    ? "bg-brand-900 text-white shadow-sm"
+                    : "text-gray-600 hover:text-brand-900 hover:bg-gray-200/60"
                 }`}
               >
                 {tab.label}
-                {activeTab === tab.id && (
-                  <motion.div
-                    layoutId="tabUnderline"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-600"
-                  />
-                )}
               </button>
             ))}
           </div>
 
+          {/* Boxy Tab Content Container */}
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -742,7 +732,7 @@ export default function ProductDetailPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="py-6"
+              className="pt-6 sm:pt-8"
             >
               {activeTab === "description" && (
                 <div className="text-gray-600 text-xs sm:text-sm leading-relaxed space-y-3">
@@ -769,12 +759,12 @@ export default function ProductDetailPage() {
 
               {activeTab === "details" && (
                 <div className="grid md:grid-cols-2 gap-6 sm:gap-8 text-xs sm:text-sm">
-                  <div>
+                  <div className="border border-gray-100 p-4 sm:p-5 rounded-xl bg-gray-50/50">
                     <h3 className="font-bold text-xs uppercase tracking-widest text-brand-950 mb-3">
                       Product Details
                     </h3>
                     <table className="w-full">
-                      <tbody className="divide-y divide-gray-100">
+                      <tbody className="divide-y divide-gray-200/60">
                         {[
                           ["Brand", p.brand],
                           ["SKU", p.sku],
@@ -798,7 +788,7 @@ export default function ProductDetailPage() {
                     </table>
                   </div>
                   {p.washCare && (
-                    <div>
+                    <div className="border border-gray-100 p-4 sm:p-5 rounded-xl bg-gray-50/50">
                       <h3 className="font-bold text-xs uppercase tracking-widest text-brand-950 mb-3">
                         Wash & Care
                       </h3>
@@ -813,7 +803,7 @@ export default function ProductDetailPage() {
               {activeTab === "reviews" && (
                 <div>
                   {p.reviewSummary?.count > 0 && (
-                    <div className="flex flex-col sm:flex-row items-center gap-6 mb-6 p-4 sm:p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="flex flex-col sm:flex-row items-center gap-6 mb-6 p-4 sm:p-6 bg-gray-50 rounded-xl border border-gray-200">
                       <div className="text-center shrink-0">
                         <p className="font-display font-black text-4xl sm:text-5xl text-brand-950">
                           {p.reviewSummary.average}
@@ -852,7 +842,7 @@ export default function ProductDetailPage() {
                     {reviewsData?.reviews?.map((r) => (
                       <div
                         key={r._id}
-                        className="p-4 rounded-xl border border-gray-100 bg-white"
+                        className="p-4 rounded-xl border border-gray-200 bg-gray-50/30"
                       >
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-2.5">
@@ -883,7 +873,7 @@ export default function ProductDetailPage() {
                       </div>
                     ))}
                     {!reviewsData?.reviews?.length && (
-                      <div className="text-center py-8 text-gray-400">
+                      <div className="text-center py-8 text-gray-400 border border-dashed border-gray-200 rounded-xl">
                         <p className="text-base font-semibold mb-1">
                           No reviews yet
                         </p>
@@ -898,7 +888,7 @@ export default function ProductDetailPage() {
 
               {activeTab === "shipping" && (
                 <div className="grid md:grid-cols-2 gap-6 text-xs sm:text-sm text-gray-600">
-                  <div>
+                  <div className="border border-gray-100 p-4 sm:p-5 rounded-xl bg-gray-50/50">
                     <h3 className="font-bold text-xs uppercase tracking-widest text-brand-950 mb-3">
                       Delivery Information
                     </h3>
@@ -930,7 +920,7 @@ export default function ProductDetailPage() {
                       ].map(({ icon: Icon, label, detail }) => (
                         <div
                           key={label}
-                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
+                          className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl shadow-xs"
                         >
                           <Icon size={16} className="text-brand-600 shrink-0" />
                           <div>
@@ -943,7 +933,7 @@ export default function ProductDetailPage() {
                       ))}
                     </div>
                   </div>
-                  <div>
+                  <div className="border border-gray-100 p-4 sm:p-5 rounded-xl bg-gray-50/50">
                     <h3 className="font-bold text-xs uppercase tracking-widest text-brand-950 mb-3">
                       Return Policy
                     </h3>
