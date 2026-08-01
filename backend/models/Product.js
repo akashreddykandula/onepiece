@@ -190,9 +190,11 @@ productSchema.pre("save", async function (next) {
     this.sku = "OP-" + Date.now().toString(36).toUpperCase();
   }
 
-  this.isInStock = this.hasVariants
-    ? this.variants.some((v) => v.stock > 0)
-    : this.stock > 0;
+  if (this.hasVariants) {
+    this.stock = this.variants.reduce((total, v) => total + v.stock, 0);
+  }
+
+  this.isInStock = this.stock > 0;
 
   next();
 });

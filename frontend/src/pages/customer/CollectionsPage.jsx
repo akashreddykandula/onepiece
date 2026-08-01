@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { socket } from "@services/socket";
 import {
   FiFilter,
   FiX,
@@ -422,12 +423,22 @@ function FilterSection({ title, children }) {
 }
 
 export default function CollectionsPage() {
-
+  const queryClient = useQueryClient();
   useEffect(() => {
+    const refreshProducts = () => {
+      queryClient.invalidateQueries({
+        queryKey: ["products"],
+      });
+    };
+
+    socket.on("productStockUpdated", refreshProducts);
+    socket.on("productUpdated", refreshProducts);
 
     return () => {
+      socket.off("productStockUpdated", refreshProducts);
+      socket.off("productUpdated", refreshProducts);
     };
-  }, []);
+  }, [queryClient]);
   const { cat } = useParams();
   const [searchParams] = useSearchParams();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -494,7 +505,6 @@ export default function CollectionsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["products", queryParams],
     queryFn: async () => {
-
       const res = await productAPI.getAll(queryParams);
 
       return res.data;

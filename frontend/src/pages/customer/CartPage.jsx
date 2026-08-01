@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,13 +14,44 @@ import {
   FiChevronRight,
   FiChevronDown,
 } from "react-icons/fi";
-import { removeItem, updateQuantity } from "@store/index";
+import { removeItem, updateQuantity, refreshCartItem } from "@store/index";
 import { formatPrice } from "@utils/helpers";
+import { productAPI } from "@services/api";
 
 export default function CartPage() {
   const dispatch = useDispatch();
   const cart = useSelector((s) => s.cart);
   const [showBillDetails, setShowBillDetails] = useState(false);
+  useEffect(() => {
+    const refreshCart = async () => {
+      for (const item of cart.items) {
+        try {
+          const res = await productAPI.getOne(item.slug || item._id);
+          const product = res.data.product;
+
+          dispatch(
+            refreshCartItem({
+              _id: item._id,
+              price: product.price,
+              freeShipping: product.freeShipping,
+              name: product.name,
+              slug: product.slug,
+              image:
+                product.images?.find((img) => img.isPrimary)?.url ||
+                product.images?.[0]?.url ||
+                item.image,
+            }),
+          );
+        } catch (err) {
+          console.error("Failed to refresh cart item:", item._id, err);
+        }
+      }
+    };
+
+    if (cart.items.length) {
+      refreshCart();
+    }
+  }, [cart.items.length, dispatch]);
 
   const freeShippingThreshold = 999;
   const progressPercent = Math.min(

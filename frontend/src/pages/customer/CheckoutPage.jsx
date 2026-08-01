@@ -144,6 +144,7 @@ export default function CheckoutPage() {
       const orderPayload = {
         items: cart.items.map((i) => ({
           product: i._id,
+          variant: i.variant,
           name: i.name,
           image: i.image,
           price: i.price,
@@ -151,6 +152,7 @@ export default function CheckoutPage() {
           size: i.size,
           color: i.color,
           colorHex: i.colorHex,
+          freeShipping: i.freeShipping,
         })),
         shippingAddress,
         paymentMethod,

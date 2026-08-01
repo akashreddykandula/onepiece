@@ -26,9 +26,13 @@ exports.createOrder = async (req, res, next) => {
 
   let subtotal = 0;
   const validatedItems = [];
+  let hasFreeShipping = false;
 
   for (const item of items) {
     const product = await Product.findById(item.product);
+    if (product.freeShipping) {
+      hasFreeShipping = true;
+    }
     if (!product || !product.isActive) {
       return next(
         new AppError(
@@ -78,8 +82,7 @@ exports.createOrder = async (req, res, next) => {
   }
 
   // Calculate shipping
-  const shippingCost = subtotal >= 999 ? 0 : 79;
-
+  const shippingCost = hasFreeShipping || subtotal >= 999 ? 0 : 79;
   // Apply coupon
   let couponDiscount = 0;
   let couponData = null;
@@ -216,6 +219,19 @@ exports.finalizeOrder = async (orderId, paymentData) => {
 
     if (bulkOps.length > 0) {
       await Product.bulkWrite(bulkOps, { session });
+      const updatedProducts = await Product.find({
+        _id: { $in: order.items.map((i) => i.product) },
+      }).session(session);
+
+      for (const product of updatedProducts) {
+        if (product.hasVariants) {
+          product.stock = product.variants.reduce((sum, v) => sum + v.stock, 0);
+        }
+
+        product.isInStock = product.stock > 0;
+
+        await product.save({ session });
+      }
     }
 
     // Update coupon usage
@@ -259,9 +275,15 @@ exports.finalizeOrder = async (orderId, paymentData) => {
       orderId: order._id,
     });
 
-    getIO().emit("productStockUpdated", {
-      orderId: order._id,
-    });
+    for (const item of order.items) {
+      const product = await Product.findById(item.product);
+
+      getIO().emit("productStockUpdated", {
+        productId: product._id,
+        stock: product.stock,
+        isInStock: product.isInStock,
+      });
+    }
     session.endSession();
 
     // Async side-effects (Email & Notifications) after transaction commits
@@ -447,12 +469,30 @@ exports.cancelOrder = async (req, res, next) => {
       message: reason || "Order cancelled.",
     });
     await order.save();
+    const updatedProducts = await Product.find({
+      _id: { $in: order.items.map((i) => i.product) },
+    });
 
+    for (const product of updatedProducts) {
+      if (product.hasVariants) {
+        product.stock = product.variants.reduce((sum, v) => sum + v.stock, 0);
+      }
+
+      product.isInStock = product.stock > 0;
+
+      await product.save();
+    }
     console.log("📦 Emitting productStockUpdated", order._id);
 
-    getIO().emit("productStockUpdated", {
-      orderId: order._id,
-    });
+    for (const item of order.items) {
+      const product = await Product.findById(item.product);
+
+      getIO().emit("productStockUpdated", {
+        productId: product._id,
+        stock: product.stock,
+        isInStock: product.isInStock,
+      });
+    }
 
     getIO().emit("orderUpdated", {
       orderId: order._id,

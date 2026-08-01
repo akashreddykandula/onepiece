@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
+import { socket } from "@services/socket";
 import {
   FiHeart,
   FiShoppingBag,
@@ -55,6 +56,7 @@ function StarRating({ rating, count, size = "sm" }) {
 export default function ProductDetailPage() {
   const { slug } = useParams();
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const { addToCart } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
 
@@ -112,6 +114,25 @@ export default function ProductDetailPage() {
       );
     }
   }, [productData, dispatch]);
+  useEffect(() => {
+    const refreshProduct = ({ productId }) => {
+      if (productId !== productData?._id) return;
+
+      queryClient.invalidateQueries({
+        queryKey: ["product", slug],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["related", productData._id],
+      });
+    };
+
+    socket.on("productStockUpdated", refreshProduct);
+
+    return () => {
+      socket.off("productStockUpdated", refreshProduct);
+    };
+  }, [productData, slug, queryClient]);
 
   const p = productData;
   const images =
@@ -173,6 +194,13 @@ export default function ProductDetailPage() {
       color: selectedColor?.name || "",
       colorHex: selectedColor?.hex || "",
       freeShipping: p.freeShipping,
+      variant: p.hasVariants
+        ? p.variants.find(
+            (v) =>
+              v.size === selectedSize &&
+              v.color === (selectedColor?.name || ""),
+          )?._id
+        : null,
       quantity,
     });
   };

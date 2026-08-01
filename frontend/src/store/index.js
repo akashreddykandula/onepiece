@@ -170,44 +170,75 @@ const cartSlice = createSlice({
   },
   reducers: {
     addItem: (state, { payload }) => {
-      const { _id, size, color } = payload;
-      const idx = state.items.findIndex(
-        (i) => i._id === _id && i.size === size && i.color === color,
+      const existing = state.items.find((i) =>
+        payload.variant
+          ? i.variant === payload.variant
+          : i._id === payload._id &&
+            i.size === payload.size &&
+            i.color === payload.color,
       );
-      if (idx >= 0) {
-        state.items[idx].quantity += payload.quantity || 1;
+
+      if (existing) {
+        existing.quantity += payload.quantity || 1;
       } else {
-        state.items.push({ ...payload, quantity: payload.quantity || 1 });
+        state.items.push({
+          ...payload,
+          quantity: payload.quantity || 1,
+        });
       }
+
       Object.assign(state, calcCart(state.items));
       saveCart(state.items);
     },
+    refreshCartItem: (state, { payload }) => {
+      const item = state.items.find((i) => i._id === payload._id);
+
+      if (item) {
+        item.price = payload.price;
+        item.freeShipping = payload.freeShipping;
+        item.name = payload.name;
+        item.image = payload.image;
+        item.slug = payload.slug;
+      }
+
+      Object.assign(state, calcCart(state.items));
+      saveCart(state.items);
+    },
+
     removeItem: (state, { payload }) => {
-      state.items = state.items.filter(
-        (i) =>
-          !(
-            i._id === payload._id &&
-            i.size === payload.size &&
-            i.color === payload.color
-          ),
+      state.items = state.items.filter((i) =>
+        payload.variant
+          ? i.variant !== payload.variant
+          : !(
+              i._id === payload._id &&
+              i.size === payload.size &&
+              i.color === payload.color
+            ),
       );
       Object.assign(state, calcCart(state.items));
       saveCart(state.items);
     },
     updateQuantity: (state, { payload }) => {
-      const { _id, size, color, quantity } = payload;
-      const item = state.items.find(
-        (i) => i._id === _id && i.size === size && i.color === color,
+      const { _id, variant, size, color, quantity } = payload;
+
+      const item = state.items.find((i) =>
+        variant
+          ? i.variant === variant
+          : i._id === _id && i.size === size && i.color === color,
       );
+
       if (item) {
         if (quantity <= 0) {
-          state.items = state.items.filter(
-            (i) => !(i._id === _id && i.size === size && i.color === color),
+          state.items = state.items.filter((i) =>
+            variant
+              ? i.variant !== variant
+              : !(i._id === _id && i.size === size && i.color === color),
           );
         } else {
           item.quantity = quantity;
         }
       }
+
       Object.assign(state, calcCart(state.items));
       saveCart(state.items);
     },
@@ -217,17 +248,29 @@ const cartSlice = createSlice({
       localStorage.removeItem("op_cart");
     },
     saveForLater: (state, { payload }) => {
-      // remove from cart (just a convenience — actual "saved" list is in user profile)
-      state.items = state.items.filter(
-        (i) => !(i._id === payload._id && i.size === payload.size),
+      state.items = state.items.filter((i) =>
+        payload.variant
+          ? i.variant !== payload.variant
+          : !(
+              i._id === payload._id &&
+              i.size === payload.size &&
+              i.color === payload.color
+            ),
       );
+
       Object.assign(state, calcCart(state.items));
       saveCart(state.items);
     },
   },
 });
-export const { addItem, removeItem, updateQuantity, clearCart, saveForLater } =
-  cartSlice.actions;
+export const {
+  addItem,
+  removeItem,
+  updateQuantity,
+  clearCart,
+  saveForLater,
+  refreshCartItem,
+} = cartSlice.actions;
 
 // ─── UI Slice ─────────────────────────────────────────────────────────────────
 const uiSlice = createSlice({

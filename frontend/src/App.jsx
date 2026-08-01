@@ -1,8 +1,11 @@
 import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { fetchMe } from "@store/index";
+import { socket } from "@services/socket";
+import { productAPI } from "@services/api";
+import { refreshCartItem } from "@store/index";
 
 // Scroll Reset Helper
 
@@ -74,7 +77,37 @@ const AdminNotifications = lazy(
 
 function AppContent() {
   const dispatch = useDispatch();
+  const cartItems = useSelector((state) => state.cart.items);
+  useEffect(() => {
+    const handleProductUpdated = async ({ productId }) => {
+      const exists = cartItems.some((item) => item._id === productId);
 
+      if (!exists) return;
+
+      try {
+        const { data } = await productAPI.getOne(productId);
+
+        dispatch(
+          refreshCartItem({
+            _id: data.product._id,
+            price: data.product.price,
+            freeShipping: data.product.freeShipping,
+            name: data.product.name,
+            image: data.product.images?.[0]?.url || data.product.images?.[0],
+            slug: data.product.slug,
+          }),
+        );
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    socket.on("productUpdated", handleProductUpdated);
+
+    return () => {
+      socket.off("productUpdated", handleProductUpdated);
+    };
+  }, [cartItems, dispatch]);
   useEffect(() => {
     const token = localStorage.getItem("op_token");
     if (token) dispatch(fetchMe());
