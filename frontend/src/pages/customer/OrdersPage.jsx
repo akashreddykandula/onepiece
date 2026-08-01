@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,7 +45,7 @@ import { ORDER_TIMELINE_STEPS, ORDER_STATUSES } from "@constants";
 import PageLoader from "@components/ui/PageLoader";
 import toast from "react-hot-toast";
 import MyCustomPrintOrders from "./MyCustomPrintOrders";
-
+import { socket } from "@services/socket";
 // ─── Mobile-Optimized Order Timeline Component ──────────────────────────────
 function OrderTimeline({ status, timeline = [], compact = false }) {
   const currentStep = ORDER_STATUSES[status]?.step ?? 0;
@@ -234,6 +234,21 @@ function OrderTimeline({ status, timeline = [], compact = false }) {
 export function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [activeTab, setActiveTab] = useState("orders");
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const handleCustomPrintUpdated = () => {
+      queryClient.invalidateQueries({
+        queryKey: ["my-custom-print-orders"],
+      });
+    };
+
+    socket.on("customPrintUpdated", handleCustomPrintUpdated);
+
+    return () => {
+      socket.off("customPrintUpdated", handleCustomPrintUpdated);
+    };
+  }, [queryClient]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["my-orders", statusFilter],

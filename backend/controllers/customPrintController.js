@@ -4,6 +4,7 @@
 const CustomPrintOrder = require("../models/CustomPrintOrder");
 const Product = require("../models/Product");
 const { uploadToCloudinary } = require("../config/cloudinary");
+const { getIO } = require("../socket");
 
 exports.createOrder = async (req, res) => {
   try {
@@ -156,7 +157,10 @@ exports.getOrderById = async (req, res) => {
         .json({ success: false, message: "Order not found" });
     }
 
-    res.status(200).json({ success: true, data: order });
+    res.status(200).json({
+      success: true,
+      data: order,
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -178,7 +182,18 @@ exports.updateStatus = async (req, res) => {
     if (designerNotes !== undefined) order.designerNotes = designerNotes;
 
     await order.save();
-    res.status(200).json({ success: true, data: order });
+
+    getIO().emit("customPrintUpdated", {
+      orderId: order._id,
+      status: order.status,
+      quotedPrice: order.quotedPrice,
+      customerDecision: order.customerDecision,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: order,
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -204,6 +219,12 @@ exports.uploadProof = async (req, res) => {
       };
       order.status = "Waiting Approval";
       await order.save();
+      getIO().emit("customPrintUpdated", {
+        orderId: order._id,
+        status: order.status,
+        quotedPrice: order.quotedPrice,
+        customerDecision: order.customerDecision,
+      });
     }
 
     res.status(200).json({ success: true, data: order });
@@ -241,7 +262,12 @@ exports.uploadPreview = async (req, res) => {
     order.status = "Waiting Approval";
 
     await order.save();
-
+    getIO().emit("customPrintUpdated", {
+      orderId: order._id,
+      status: order.status,
+      quotedPrice: order.quotedPrice,
+      customerDecision: order.customerDecision,
+    });
     res.status(200).json({
       success: true,
       data: order,
@@ -293,6 +319,12 @@ exports.customerApproval = async (req, res) => {
     }
 
     await order.save();
+    getIO().emit("customPrintUpdated", {
+      orderId: order._id,
+      status: order.status,
+      quotedPrice: order.quotedPrice,
+      customerDecision: order.customerDecision,
+    });
 
     res.status(200).json({
       success: true,

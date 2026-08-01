@@ -53,9 +53,8 @@ io.on("connection", (socket) => {
   });
   console.log("🟢 Client connected:", socket.id);
 
-  socket.onAny((event, ...args) => {
-    console.log("📩 Client sent:", event, args);
-  });
+  socket.onAnyOutgoing = (...args) => console.log(args);
+
   socket.on("disconnect", (reason) => {
     for (const [userId, socketId] of onlineUsers.entries()) {
       if (socketId === socket.id) {

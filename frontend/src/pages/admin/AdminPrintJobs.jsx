@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -10,6 +10,7 @@ import {
   FiFileText,
 } from "react-icons/fi";
 import { customPrintAPI } from "@services/api";
+import { socket } from "@services/socket";
 import { formatDate } from "@utils/helpers";
 import PageLoader from "@components/ui/PageLoader";
 import toast from "react-hot-toast";
@@ -51,6 +52,20 @@ const isImageFile = (file) => {
 
 export default function AdminPrintJobs() {
   const qc = useQueryClient();
+  useEffect(() => {
+    socket.on("connect", () => {});
+
+    socket.on("customPrintUpdated", (data) => {
+      qc.invalidateQueries({
+        queryKey: ["custom-print-orders"],
+      });
+    });
+
+    return () => {
+      socket.off("connect");
+      socket.off("customPrintUpdated");
+    };
+  }, [qc]);
   const [statusFilter, setStatusFilter] = useState("");
   const [selected, setSelected] = useState(null);
   const [newStatus, setNewStatus] = useState("");
@@ -95,6 +110,18 @@ export default function AdminPrintJobs() {
   });
 
   const allJobs = data || [];
+  useEffect(() => {
+    if (!selected || !allJobs.length) return;
+
+    const latest = allJobs.find((j) => j._id === selected._id);
+
+    if (latest) {
+      setSelected(latest);
+      setNewStatus(latest.status);
+      setQuotedPrice(latest.quotedPrice || "");
+      setAdminNotes(latest.adminNotes || latest.designerNotes || "");
+    }
+  }, [allJobs]);
 
   // Apply tab status filter dynamically
   const filteredJobs = statusFilter
