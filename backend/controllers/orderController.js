@@ -7,6 +7,8 @@ const User = require("../models/User");
 const { AppError } = require("../middleware/errorMiddleware");
 const emailService = require("../services/emailService");
 const { getIO } = require("../socket");
+const path = require("path");
+const fs = require("fs");
 
 // POST /api/orders
 exports.createOrder = async (req, res, next) => {
@@ -162,7 +164,7 @@ exports.createOrder = async (req, res, next) => {
       { status: "pending", message: "Order placed and awaiting payment." },
     ],
   });
-  console.log("📦 Emitting orderCreated", order._id);
+
   getIO().emit("orderCreated", {
     orderId: order._id,
   });
@@ -269,7 +271,6 @@ exports.finalizeOrder = async (orderId, paymentData) => {
 
     await order.save({ session });
     await session.commitTransaction();
-    console.log("📦 Emitting orderUpdated", order._id);
 
     getIO().emit("orderUpdated", {
       orderId: order._id,
@@ -482,7 +483,6 @@ exports.cancelOrder = async (req, res, next) => {
 
       await product.save();
     }
-    console.log("📦 Emitting productStockUpdated", order._id);
 
     for (const item of order.items) {
       const product = await Product.findById(item.product);
@@ -594,16 +594,20 @@ exports.updateOrderStatus = async (req, res, next) => {
       updatedBy: req.user._id,
     });
 
-    if (trackingNumber) order.tracking.trackingNumber = trackingNumber;
-    if (courier) order.tracking.courier = courier;
-    if (trackingUrl) order.tracking.trackingUrl = trackingUrl;
-    if (estimatedDelivery)
-      order.tracking.estimatedDelivery = new Date(estimatedDelivery);
-    if (status === "delivered") order.tracking.deliveredAt = new Date();
+    if (status === "delivered") {
+      order.tracking.deliveredAt = new Date();
+
+      if (String(order.paymentInfo.method).toLowerCase() === "cod") {
+        console.log("COD detected -> marking paid");
+
+        order.paymentInfo.status = "paid";
+        order.paymentInfo.paidAt = new Date();
+      }
+
+      console.log("Status after:", order.paymentInfo.status);
+    }
 
     await order.save();
-    console.log("📦 Emitting orderStatusUpdated", order._id);
-
     getIO().emit("orderStatusUpdated", {
       orderId: order._id,
     });
@@ -652,6 +656,460 @@ exports.updateOrderStatus = async (req, res, next) => {
     }
 
     res.json({ success: true, order });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// invoice section
+
+const https = require("https");
+const PDFDocument = require("pdfkit");
+
+// Helper function to fetch images asynchronously (Handles URLs & Local File Paths)
+async function fetchImageBuffer(source) {
+  if (!source) return null;
+
+  // Local File System
+  if (fs.existsSync(source)) {
+    return fs.readFileSync(source);
+  }
+
+  // Web URL
+  if (source.startsWith("http://") || source.startsWith("https://")) {
+    return new Promise((resolve) => {
+      https
+        .get(source, (res) => {
+          const data = [];
+          res.on("data", (chunk) => data.push(chunk));
+          res.on("end", () => resolve(Buffer.concat(data)));
+          res.on("error", () => resolve(null));
+        })
+        .on("error", () => resolve(null));
+    });
+  }
+
+  // Base64 String
+  if (source.startsWith("data:image")) {
+    const base64Data = source.replace(/^data:image\/\w+;base64,/, "");
+    return Buffer.from(base64Data, "base64");
+  }
+
+  return null;
+}
+
+exports.downloadInvoice = async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return next(new AppError("Order not found.", 404));
+    }
+
+    const isOwner =
+      order.user &&
+      req.user &&
+      order.user.toString() === req.user._id.toString();
+
+    const isAdmin =
+      req.user?.role === "admin" || req.user?.role === "superadmin";
+
+    if (!isOwner && !isAdmin) {
+      return next(new AppError("Access denied.", 403));
+    }
+
+    // Initialize document with tight vertical layout margins
+    const doc = new PDFDocument({
+      size: "A4", // Height: 841.89 pt
+      margin: 35,
+    });
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=Invoice-${order.orderNumber}.pdf`,
+    );
+    res.setHeader("Content-Type", "application/pdf");
+
+    doc.pipe(res);
+
+    // Color Palette
+    const PRIMARY = "#0A5ACB";
+    const NAVY = "#0A2A80";
+    const GREY = "#64748B";
+
+    // ------------------------------------
+    // 1. Header & Brand Section
+    // ------------------------------------
+    const logoPath = path.join(__dirname, "../public/logo.png");
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, 35, 30, { width: 60 });
+    }
+
+    doc
+      .fillColor(NAVY)
+      .fontSize(24)
+      .font("Helvetica-Bold")
+      .text("ONE PIECE", 105, 32);
+
+    doc
+      .fillColor(PRIMARY)
+      .fontSize(10)
+      .font("Helvetica")
+      .text("YOUR STATEMENT. YOUR STYLE.", 105, 60);
+
+    // Right Header Section
+    doc
+      .fillColor("#111827")
+      .fontSize(18)
+      .font("Helvetica-Bold")
+      .text("TAX INVOICE", 380, 32, { align: "right" });
+
+    doc
+      .fontSize(9)
+      .fillColor(GREY)
+      .text(`Invoice No : ${order.invoiceNumber || "-"}`, 380, 56, {
+        align: "right",
+      })
+      .text(`Order No : ${order.orderNumber}`, 380, 68, { align: "right" })
+      .text(
+        `Date : ${new Date(order.createdAt).toLocaleDateString("en-IN")}`,
+        380,
+        80,
+        { align: "right" },
+      );
+
+    // Header Divider Line
+    doc.moveTo(35, 100).lineTo(560, 100).strokeColor("#E2E8F0").stroke();
+
+    // ------------------------------------
+    // 2. Seller & Customer Info
+    // ------------------------------------
+    const startY = 110;
+    const boxHeight = 105;
+
+    // Seller Box
+    doc
+      .roundedRect(35, startY, 255, boxHeight, 6)
+      .fillAndStroke("#F8FAFC", "#E2E8F0");
+    // Customer Box
+    doc
+      .roundedRect(305, startY, 255, boxHeight, 6)
+      .fillAndStroke("#F8FAFC", "#E2E8F0");
+
+    // -- Seller Info --
+    doc
+      .fillColor(PRIMARY)
+      .font("Helvetica-Bold")
+      .fontSize(10)
+      .text("Sold By", 48, startY + 8);
+    doc
+      .fillColor("#111827")
+      .font("Helvetica-Bold")
+      .fontSize(9.5)
+      .text("ONE PIECE", 48, startY + 24);
+    doc
+      .font("Helvetica")
+      .fontSize(8.5)
+      .fillColor("#475569")
+      .text("Premium Fashion Store", 48, startY + 38)
+      .text("Hyderabad, Telangana, India", 48, startY + 50)
+      .text("support@onepiece.com | www.onepiece.com", 48, startY + 62);
+
+    // -- Customer Info --
+    doc
+      .fillColor(PRIMARY)
+      .font("Helvetica-Bold")
+      .fontSize(10)
+      .text("Bill To", 318, startY + 8);
+    doc
+      .fillColor("#111827")
+      .font("Helvetica-Bold")
+      .fontSize(9.5)
+      .text(order.shippingAddress.name, 318, startY + 24);
+
+    let addrText = `${order.shippingAddress.line1}`;
+    if (order.shippingAddress.line2)
+      addrText += `, ${order.shippingAddress.line2}`;
+
+    doc
+      .font("Helvetica")
+      .fontSize(8.5)
+      .fillColor("#475569")
+      .text(`Phone: ${order.shippingAddress.phone}`, 318, startY + 38)
+      .text(addrText, 318, startY + 50, {
+        width: 230,
+        height: 20,
+        ellipsis: true,
+      })
+      .text(
+        `${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.pincode}`,
+        318,
+        startY + 70,
+      );
+
+    // ------------------------------------
+    // 3. Items Table Setup
+    // ------------------------------------
+    let tableTop = startY + boxHeight + 15;
+
+    // Table Header Bar
+    doc.roundedRect(35, tableTop, 525, 22, 4).fillAndStroke(PRIMARY, PRIMARY);
+    doc.fillColor("white").font("Helvetica-Bold").fontSize(9);
+
+    doc.text("Item Details", 45, tableTop + 6);
+    doc.text("Size", 305, tableTop + 6);
+    doc.text("Qty", 365, tableTop + 6);
+    doc.text("Price", 420, tableTop + 6);
+    doc.text("Amount", 485, tableTop + 6);
+
+    let rowY = tableTop + 26;
+    const rowHeight = 44; // Compact row height with space for thumbnails
+
+    // Limit array visually if needed, though rowHeight dynamic spacing guarantees single-page layout for standard orders
+    for (let index = 0; index < order.items.length; index++) {
+      const item = order.items[index];
+
+      // Zebra striping
+      if (index % 2 === 0) {
+        doc.rect(35, rowY - 2, 525, rowHeight).fill("#F8FAFC");
+      }
+
+      // --- Thumbnail Image ---
+      const imgBuffer = await fetchImageBuffer(item.image);
+      const imgX = 42;
+      const imgY = rowY + 3;
+      const imgSize = 34;
+
+      if (imgBuffer) {
+        try {
+          doc.save();
+          doc.roundedRect(imgX, imgY, imgSize, imgSize, 4).clip();
+          doc.image(imgBuffer, imgX, imgY, { width: imgSize, height: imgSize });
+          doc.restore();
+          doc
+            .roundedRect(imgX, imgY, imgSize, imgSize, 4)
+            .strokeColor("#CBD5E1")
+            .lineWidth(0.5)
+            .stroke();
+        } catch (e) {
+          // Fallback box on corrupt image
+          doc
+            .roundedRect(imgX, imgY, imgSize, imgSize, 4)
+            .fillAndStroke("#E2E8F0", "#CBD5E1");
+        }
+      } else {
+        // Placeholder Box
+        doc
+          .roundedRect(imgX, imgY, imgSize, imgSize, 4)
+          .fillAndStroke("#E2E8F0", "#CBD5E1");
+      }
+
+      // --- Item Details (Title, SKU, Color) ---
+      const textX = imgX + imgSize + 10;
+      doc.fillColor("#111827").font("Helvetica-Bold").fontSize(9);
+      doc.text(item.name, textX, rowY + 4, {
+        width: 210,
+        height: 12,
+        ellipsis: true,
+      });
+
+      // SKU Code
+      doc.font("Helvetica").fontSize(7.5).fillColor(GREY);
+      doc.text(`SKU: ${item.sku || "N/A"}`, textX, rowY + 18);
+
+      // Color Swatch + Label
+      if (item.color) {
+        const swatchY = rowY + 30;
+        const colorHex = item.colorHex || "#64748B"; // Fallback color hex
+
+        // Vector Color Dot
+        doc
+          .circle(textX + 4, swatchY + 3, 3.5)
+          .fillAndStroke(colorHex, "#94A3B8");
+
+        doc
+          .fillColor("#475569")
+          .fontSize(7.5)
+          .text(item.color, textX + 12, swatchY);
+      }
+
+      // --- Size Badge ---
+      const sizeText = String(item.size || "OS").toUpperCase();
+      const badgeX = 300;
+      const badgeY = rowY + 10;
+
+      doc
+        .roundedRect(badgeX, badgeY, 28, 16, 3)
+        .fillAndStroke("#EFF6FF", "#BFDBFE");
+      doc
+        .fillColor(PRIMARY)
+        .font("Helvetica-Bold")
+        .fontSize(8)
+        .text(sizeText, badgeX, badgeY + 4, { width: 28, align: "center" });
+
+      // --- Quantity, Price, Amount ---
+      doc.fillColor("#111827").font("Helvetica").fontSize(9);
+      doc.text(item.quantity.toString(), 365, rowY + 12);
+      doc.text(`₹${item.price.toFixed(2)}`, 410, rowY + 12);
+      doc
+        .font("Helvetica-Bold")
+        .text(`₹${(item.price * item.quantity).toFixed(2)}`, 480, rowY + 12);
+
+      rowY += rowHeight;
+    }
+
+    doc
+      .moveTo(35, rowY)
+      .lineTo(560, rowY)
+      .strokeColor("#CBD5E1")
+      .lineWidth(1)
+      .stroke();
+
+    // ------------------------------------
+    // 4. Payment Summary & Status
+    // ------------------------------------
+    let summaryY = rowY + 12;
+    const summaryWidth = 210;
+    const summaryX = 350;
+
+    // Payment Box
+    doc
+      .roundedRect(summaryX, summaryY, summaryWidth, 115, 6)
+      .fillAndStroke("#F8FAFC", "#E2E8F0");
+    doc
+      .fillColor(PRIMARY)
+      .font("Helvetica-Bold")
+      .fontSize(10)
+      .text("Payment Summary", summaryX + 12, summaryY + 10);
+
+    let sy = summaryY + 28;
+    const drawSummaryRow = (label, value, color = "#334155", bold = false) => {
+      doc
+        .fillColor(color)
+        .font(bold ? "Helvetica-Bold" : "Helvetica")
+        .fontSize(8.5);
+      doc.text(label, summaryX + 12, sy);
+      doc.text(value, summaryX + summaryWidth - 75, sy, {
+        width: 63,
+        align: "right",
+      });
+      sy += 15;
+    };
+
+    drawSummaryRow("Subtotal", `₹${order.pricing.subtotal.toFixed(2)}`);
+    drawSummaryRow(
+      "Shipping",
+      order.pricing.shippingCost === 0
+        ? "FREE"
+        : `₹${order.pricing.shippingCost.toFixed(2)}`,
+      order.pricing.shippingCost === 0 ? "#16A34A" : "#334155",
+    );
+
+    if (order.pricing.couponDiscount > 0) {
+      drawSummaryRow(
+        "Discount",
+        `- ₹${order.pricing.couponDiscount.toFixed(2)}`,
+        "#16A34A",
+      );
+    }
+
+    drawSummaryRow(
+      `GST (${order.pricing.gstPercentage}%)`,
+      `₹${order.pricing.gst.toFixed(2)}`,
+    );
+
+    // Inner Summary Divider
+    doc
+      .moveTo(summaryX + 12, sy)
+      .lineTo(summaryX + summaryWidth - 12, sy)
+      .strokeColor("#CBD5E1")
+      .stroke();
+    sy += 6;
+
+    // Total Line
+    doc.font("Helvetica-Bold").fontSize(10).fillColor("#111827");
+    doc.text("Grand Total", summaryX + 12, sy);
+    doc.text(
+      `₹${order.pricing.total.toFixed(2)}`,
+      summaryX + summaryWidth - 85,
+      sy,
+      { width: 73, align: "right" },
+    );
+
+    // Payment Status Pill
+    const statusY = summaryY + 122;
+    doc
+      .roundedRect(summaryX, statusY, summaryWidth, 26, 4)
+      .fillAndStroke("#ECFDF5", "#BBF7D0");
+    doc
+      .fillColor("#15803D")
+      .font("Helvetica-Bold")
+      .fontSize(9)
+      .text(
+        `Payment Status : ${order.paymentInfo.status.toUpperCase()}`,
+        summaryX,
+        statusY + 8,
+        {
+          width: summaryWidth,
+          align: "center",
+        },
+      );
+
+    // ------------------------------------
+    // 5. Single-Page Footer Section
+    // ------------------------------------
+    const footerY = 680;
+
+    doc
+      .moveTo(35, footerY - 10)
+      .lineTo(560, footerY - 10)
+      .strokeColor("#CBD5E1")
+      .stroke();
+
+    doc
+      .fillColor(PRIMARY)
+      .font("Helvetica-Bold")
+      .fontSize(12)
+      .text("Thank you for shopping with ONE PIECE!", 35, footerY, {
+        align: "center",
+      });
+
+    // Terms and Contact Side-By-Side (Saves Vertical Space)
+    const colY = footerY + 22;
+
+    // Terms Column (Left)
+    doc
+      .fillColor("#111827")
+      .font("Helvetica-Bold")
+      .fontSize(8.5)
+      .text("Terms & Conditions", 35, colY);
+    doc
+      .font("Helvetica")
+      .fillColor("#475569")
+      .fontSize(7.5)
+      .text("• Returns allowed within 7 days per policy.", 35, colY + 12)
+      .text("• Computer-generated; signature not required.", 35, colY + 22);
+
+    // Support Column (Right)
+    doc
+      .fillColor("#111827")
+      .font("Helvetica-Bold")
+      .fontSize(8.5)
+      .text("Need Help?", 350, colY);
+    doc
+      .font("Helvetica")
+      .fillColor("#475569")
+      .fontSize(7.5)
+      .text("Email: support@onepiece.com", 350, colY + 12)
+      .text("Phone: +91 98765 43210", 350, colY + 22);
+
+    // Page Number Footer
+    doc
+      .fillColor("#94A3B8")
+      .fontSize(8)
+      .text("Page 1 of 1", 35, 805, { width: 525, align: "center" });
+
+    doc.end();
   } catch (err) {
     next(err);
   }

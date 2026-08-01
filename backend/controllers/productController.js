@@ -262,8 +262,6 @@ exports.updateProduct = async (req, res, next) => {
   await product.populate("category", "name slug");
   await product.populate("subcategory", "name slug");
 
-  console.log("📦 Emitting productUpdated:", product._id);
-
   getIO().emit("productUpdated", {
     productId: product._id,
   });
@@ -353,11 +351,6 @@ exports.updateStock = async (req, res, next) => {
   }
 
   await product.save();
-  console.log("📦 Emitting productStockUpdated", {
-    productId: product._id,
-    stock: product.stock,
-    isInStock: product.isInStock,
-  });
 
   getIO().emit("productStockUpdated", {
     productId: product._id,

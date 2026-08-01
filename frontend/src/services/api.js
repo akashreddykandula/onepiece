@@ -91,6 +91,10 @@ export const orderAPI = {
   getOne: (id) => api.get(`/orders/${id}`),
   track: (data) => api.post("/orders/track", data),
   cancel: (id, r) => api.put(`/orders/${id}/cancel`, { reason: r }),
+  downloadInvoice: (id) =>
+    api.get(`/orders/${id}/invoice`, {
+      responseType: "blob",
+    }),
   // Admin
   getAllAdmin: (p) => api.get("/orders/admin/all", { params: p }),
   updateStatus: (id, d) => api.put(`/orders/${id}/status`, d),

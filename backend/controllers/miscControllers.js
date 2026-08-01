@@ -503,6 +503,28 @@ exports.createReturn = async (req, res, next) => {
   if (order.orderStatus !== "delivered") {
     return next(new AppError("Only delivered orders can be returned.", 400));
   }
+
+  const RETURN_WINDOW_DAYS = 7;
+
+  const deliveredEvent = order.timeline.find(
+    (event) => event.status === "delivered",
+  );
+
+  if (!deliveredEvent) {
+    return next(new AppError("Delivery date not found.", 400));
+  }
+
+  const returnExpiryDate = new Date(deliveredEvent.timestamp);
+  returnExpiryDate.setDate(returnExpiryDate.getDate() + RETURN_WINDOW_DAYS);
+
+  if (new Date() > returnExpiryDate) {
+    return next(
+      new AppError(
+        `Return period expired on ${returnExpiryDate.toLocaleDateString()}.`,
+        400,
+      ),
+    );
+  }
   const returnRequest = await Return.create({
     order: orderId,
     user: req.user._id,
@@ -531,7 +553,6 @@ exports.createReturn = async (req, res, next) => {
     message: "Return requested by customer.",
   });
   await order.save();
-  console.log("📦 Emitting returnRequestCreated", returnRequest._id);
 
   getIO().emit("returnRequestCreated", {
     returnRequestId: returnRequest._id,
@@ -608,7 +629,6 @@ exports.updateReturnStatus = async (req, res, next) => {
     timestamp: new Date(),
   });
   await returnReq.save();
-  console.log("📦 Emitting returnStatusUpdated", returnReq._id);
 
   getIO().emit("returnStatusUpdated", {
     returnId: returnReq._id,

@@ -43,6 +43,7 @@ const {
 const orderCtrl = require("../controllers/orderController");
 const paymentCtrl = require("../controllers/paymentController");
 const reviewCtrl = require("../controllers/reviewController");
+const { downloadInvoice } = require("../controllers/invoiceController");
 const {
   protect,
   admin,
@@ -81,7 +82,9 @@ orderRouter.post("/", optionalAuth, orderCtrl.createOrder);
 orderRouter.post("/track", orderCtrl.trackOrder);
 orderRouter.get("/my", protect, orderCtrl.getMyOrders);
 orderRouter.get("/admin/all", ...admin, orderCtrl.getAllOrders);
+orderRouter.get("/:id/invoice", protect, orderCtrl.downloadInvoice);
 orderRouter.get("/:id", optionalAuth, orderCtrl.getOrder);
+orderRouter.get("/:id/invoice", protect, orderCtrl.downloadInvoice);
 orderRouter.put("/:id/cancel", optionalAuth, orderCtrl.cancelOrder);
 orderRouter.put("/:id/status", ...admin, orderCtrl.updateOrderStatus);
 

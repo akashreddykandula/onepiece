@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
+import api from "@services/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   FiPackage,
@@ -554,6 +555,24 @@ export function OrderDetailPage() {
 
   const order = data?.order;
   const returnRequest = data?.returnRequest;
+  const RETURN_WINDOW_DAYS = 7; // or 10/15 depending on your policy
+
+  const deliveredAt = order?.timeline?.find(
+    (t) => t.status === "delivered",
+  )?.timestamp;
+
+  const returnExpiryDate = deliveredAt
+    ? new Date(
+        new Date(deliveredAt).getTime() +
+          RETURN_WINDOW_DAYS * 24 * 60 * 60 * 1000,
+      )
+    : null;
+
+  const canReturn = returnExpiryDate && new Date() <= returnExpiryDate;
+
+  const daysLeft = returnExpiryDate
+    ? Math.ceil((returnExpiryDate - new Date()) / (1000 * 60 * 60 * 24))
+    : 0;
 
   const cancelMutation = useMutation({
     mutationFn: () => orderAPI.cancel(id, cancelReason),
@@ -689,7 +708,31 @@ export function OrderDetailPage() {
       setUploadingImages(false);
     }
   };
+  const handleDownloadInvoice = async () => {
+    try {
+      const response = await orderAPI.downloadInvoice(order._id);
 
+      const blob = new Blob([response.data], {
+        type: "application/pdf",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${order.invoiceNumber || order.orderNumber}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Invoice downloaded successfully");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to download invoice");
+    }
+  };
   if (isLoading) return <PageLoader />;
 
   if (!order) {
@@ -993,21 +1036,74 @@ export function OrderDetailPage() {
                 </span>
               </p>
             </div>
-
             {/* Actions Panel */}
             <div className="space-y-2">
+              {order.orderStatus === "delivered" && !hasReturnRequest && (
+                <div
+                  className={`rounded-xl border p-3 ${
+                    canReturn
+                      ? "border-emerald-200 bg-emerald-50"
+                      : "border-red-200 bg-red-50"
+                  }`}
+                >
+                  <p
+                    className={`text-xs font-bold ${
+                      canReturn ? "text-emerald-700" : "text-red-700"
+                    }`}
+                  >
+                    {canReturn
+                      ? `✓ Return available until ${formatDate(returnExpiryDate)}`
+                      : `✕ Return window expired on ${formatDate(returnExpiryDate)}`}
+                  </p>
+
+                  {canReturn && (
+                    <p className="mt-1 text-[11px] text-emerald-600">
+                      {daysLeft === 0
+                        ? "Last day to request a return."
+                        : `${daysLeft} day${daysLeft > 1 ? "s" : ""} remaining`}
+                    </p>
+                  )}
+                </div>
+              )}
               <button
                 onClick={() =>
                   openWhatsApp(orderSupportMessage(order.orderNumber))
                 }
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl font-bold text-xs transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-500 text-slate-100 hover:bg-emerald-100 rounded-xl font-bold text-xs transition-colors"
               >
                 <FaWhatsapp size={15} /> Contact Support
               </button>
 
               {order.invoiceNumber && (
-                <button className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-xs transition-colors">
-                  <FiDownload size={14} /> Download Invoice
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await api.get(
+                        `/orders/${order._id}/invoice`,
+                        {
+                          responseType: "blob",
+                        },
+                      );
+
+                      const url = window.URL.createObjectURL(
+                        new Blob([response.data]),
+                      );
+
+                      const link = document.createElement("a");
+                      link.href = url;
+                      link.download = `Invoice-${order.orderNumber}.pdf`;
+                      document.body.appendChild(link);
+                      link.click();
+                      link.remove();
+                      window.URL.revokeObjectURL(url);
+                    } catch {
+                      toast.error("Unable to download invoice");
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold text-xs transition-colors"
+                >
+                  <FiDownload size={14} />
+                  Download Invoice
                 </button>
               )}
 
@@ -1020,14 +1116,16 @@ export function OrderDetailPage() {
                 </button>
               )}
 
-              {order.orderStatus === "delivered" && !hasReturnRequest && (
-                <button
-                  onClick={() => setShowReturnModal(true)}
-                  className="w-full bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 rounded-xl font-bold text-xs py-2.5 flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  Request Return
-                </button>
-              )}
+              {order.orderStatus === "delivered" &&
+                !hasReturnRequest &&
+                canReturn && (
+                  <button
+                    onClick={() => setShowReturnModal(true)}
+                    className="w-full bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 rounded-xl font-bold text-xs py-2.5 flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    Request Return
+                  </button>
+                )}
 
               {order.orderStatus === "delivered" && (
                 <button
