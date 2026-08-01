@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   FiUpload,
   FiX,
@@ -12,6 +12,8 @@ import {
   FiArrowRight,
   FiRotateCw,
   FiRefreshCw,
+  FiShoppingBag,
+  FiStar,
 } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import toast from "react-hot-toast";
@@ -64,6 +66,7 @@ export default function CustomPrintPage() {
 
   const fileInputRef = useRef(null);
   const { productId } = useParams();
+  const navigate = useNavigate();
 
   const {
     register,
@@ -85,7 +88,12 @@ export default function CustomPrintPage() {
       notes: "",
     },
   });
-
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, [currentStep]);
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -234,6 +242,13 @@ export default function CustomPrintPage() {
       reset();
       toast.success("Custom print request submitted successfully!");
       setSubmitted(true);
+      window.scrollTo({
+        top: 0,
+
+        behavior: "smooth",
+      });
+
+      setSubmitted(true);
     } catch (error) {
       console.error("Custom Print Error:", error);
       toast.error(
@@ -279,12 +294,31 @@ export default function CustomPrintPage() {
           <div className="w-20 h-20 bg-brand-gradient rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-brand-500/20">
             <FiCheck size={36} className="text-white" />
           </div>
+
+          <div className="flex items-center justify-center gap-1 text-brand-600 mb-2">
+            <FiStar size={16} className="fill-brand-600" />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              Order Received
+            </span>
+          </div>
+
           <h2 className="heading-lg mb-3">Request Submitted! 🎨</h2>
           <p className="text-gray-500 text-sm mb-8">
             Our design team will review your files and reach out within 2 hours
             with a preview and confirmation.
           </p>
+
           <div className="space-y-3">
+            <button
+              onClick={() =>
+                navigate("/orders", {
+                  state: { tab: "custom" },
+                })
+              }
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-semibold transition-colors shadow-sm"
+            >
+              <FiShoppingBag size={18} /> View My Custom Orders
+            </button>
             <button
               onClick={() => openWhatsApp(getWhatsAppMessage())}
               className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#25D366] text-white rounded-xl font-semibold hover:bg-green-600 transition-colors shadow-sm"

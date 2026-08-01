@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@services/api";
@@ -47,6 +47,7 @@ import PageLoader from "@components/ui/PageLoader";
 import toast from "react-hot-toast";
 import MyCustomPrintOrders from "./MyCustomPrintOrders";
 import { socket } from "@services/socket";
+
 // ─── Mobile-Optimized Order Timeline Component ──────────────────────────────
 function OrderTimeline({ status, timeline = [], compact = false }) {
   const currentStep = ORDER_STATUSES[status]?.step ?? 0;
@@ -233,8 +234,9 @@ function OrderTimeline({ status, timeline = [], compact = false }) {
 
 // ─── OrdersPage Component ──────────────────────────────────────────────────
 export function OrdersPage() {
+  const location = useLocation();
   const [statusFilter, setStatusFilter] = useState("");
-  const [activeTab, setActiveTab] = useState("orders");
+  const [activeTab, setActiveTab] = useState(location.state?.tab || "orders");
   const queryClient = useQueryClient();
 
   useEffect(() => {

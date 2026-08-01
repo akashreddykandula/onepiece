@@ -1,8 +1,8 @@
 const messages = [
-  "🚚 Free Shipping on orders above ₹999",
-  "✨ New arrivals every week",
-  "🎨 Custom print on any selective product",
-  "↩️ 7-day easy returns T&C apply",
+  "Free Shipping on orders above ₹999",
+  "New arrivals every week",
+  "Custom print on any selective product",
+  "7-day easy returns T&C apply",
 ];
 
 export default function AnnouncementBar() {
