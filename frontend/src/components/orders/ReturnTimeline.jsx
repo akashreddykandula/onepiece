@@ -7,7 +7,7 @@ const RETURN_STEPS = [
   { key: "approved", label: "Approved" },
   { key: "pickup_scheduled", label: "Pickup Scheduled" },
   { key: "picked_up", label: "Picked Up" },
-  { key: "processing", label: "Inspection" },
+  { key: "processing", label: "processing" },
   { key: "refund_initiated", label: "Refund Initiated" },
   { key: "completed", label: "Refund Completed" },
 ];
