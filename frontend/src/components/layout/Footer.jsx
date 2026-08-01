@@ -36,6 +36,10 @@ const footerLinks = {
     { label: "Size Guide", href: "/pages/size-guide" },
     { label: "FAQs", href: "/pages/faqs" },
     { label: "Contact Us", href: "/pages/contact" },
+    {
+      label: "Cookie Policy",
+      href: "/pages/cookie-policy",
+    },
   ],
   Company: [
     { label: "About Us", href: "/pages/about" },

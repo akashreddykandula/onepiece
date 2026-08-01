@@ -6,6 +6,7 @@ import { fetchMe } from "@store/index";
 import { socket } from "@services/socket";
 import { productAPI } from "@services/api";
 import { refreshCartItem } from "@store/index";
+import CookieConsent from "@components/common/CookieConsent";
 
 // Scroll Reset Helper
 
@@ -211,6 +212,7 @@ function AppContent() {
           </Route>
         </Routes>
       </Suspense>
+      <CookieConsent />
     </BrowserRouter>
   );
 }
