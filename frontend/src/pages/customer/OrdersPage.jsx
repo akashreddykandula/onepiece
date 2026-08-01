@@ -775,6 +775,57 @@ export function OrderDetailPage() {
                   timeline={returnRequest.timeline}
                 />
               )}
+              {returnRequest && (
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Return Details
+                  </h3>
+
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500">Return Status</span>
+                    <span className="font-semibold capitalize">
+                      {returnRequest.status.replace(/_/g, " ")}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500">Refund Status</span>
+                    <span className="font-semibold capitalize">
+                      {returnRequest.refundStatus}
+                    </span>
+                  </div>
+
+                  {returnRequest.refundAmount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Refund Amount</span>
+                      <span className="font-bold text-emerald-600">
+                        {formatPrice(returnRequest.refundAmount)}
+                      </span>
+                    </div>
+                  )}
+
+                  {returnRequest.refundMethod && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Refund Method</span>
+                      <span className="font-semibold capitalize">
+                        {returnRequest.refundMethod.replace(/_/g, " ")}
+                      </span>
+                    </div>
+                  )}
+
+                  {returnRequest.adminNotes && (
+                    <div className="pt-3 border-t border-slate-200">
+                      <p className="text-xs uppercase font-bold text-slate-500 mb-1">
+                        Admin Note
+                      </p>
+
+                      <p className="text-sm text-slate-700">
+                        {returnRequest.adminNotes}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {!returnRequest && (
                 <div className="mt-3 p-3 bg-brand-50/50 rounded-xl border border-brand-100/60 flex items-start gap-2.5">
