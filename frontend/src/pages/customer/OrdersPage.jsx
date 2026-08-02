@@ -383,6 +383,11 @@ export function OrdersPage() {
                 <div className="space-y-3.5 sm:space-y-4">
                   {data.orders.map((order, i) => {
                     const statusCfg = getOrderStatusConfig(order.orderStatus);
+
+                    const isCustomOrder = order.items?.some(
+                      (item) => item.isCustomPrint,
+                    );
+
                     return (
                       <motion.div
                         key={order._id}
@@ -392,19 +397,15 @@ export function OrdersPage() {
                         className="bg-white rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all overflow-hidden"
                       >
                         {/* Order Header Bar */}
-                        <div className="bg-slate-50/80 px-3.5 sm:px-5 py-2.5 border-b border-slate-100 flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider ${statusCfg.color}`}
-                            >
-                              {statusCfg.label}
-                            </span>
-                            <span className="text-[11px] font-mono font-bold text-slate-700">
-                              #{order.orderNumber}
-                            </span>
-                          </div>
-                          <span className="text-[11px] font-semibold text-slate-500">
-                            {formatDate(order.createdAt)}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            className={`px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider ${statusCfg.color}`}
+                          >
+                            {statusCfg.label}
+                          </span>
+
+                          <span className="text-[11px] font-mono font-bold text-slate-700">
+                            #{order.orderNumber}
                           </span>
                         </div>
 
@@ -423,6 +424,12 @@ export function OrdersPage() {
                               <h3 className="font-bold text-xs sm:text-sm text-slate-900 truncate">
                                 {order.items?.[0]?.name}
                               </h3>
+                              {isCustomOrder && (
+                                <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-violet-50 border border-violet-200 px-2 py-1 text-[10px] font-bold text-violet-700">
+                                  <FiPrinter size={10} />
+                                  Custom Print Product
+                                </div>
+                              )}
 
                               <div className="flex items-center gap-2 text-[11px] text-slate-500">
                                 {order.items?.[0]?.size && (
@@ -556,6 +563,7 @@ export function OrderDetailPage() {
   });
 
   const order = data?.order;
+  const isCustomPrintOrder = order?.items?.some((item) => item.isCustomPrint);
   const returnRequest = data?.returnRequest;
   const RETURN_WINDOW_DAYS = 7; // or 10/15 depending on your policy
 
@@ -759,6 +767,7 @@ export function OrderDetailPage() {
 
   const canCancel = isOrderCancellable(order.orderStatus);
   const hasReturnRequest = !!returnRequest;
+  const isCustomOrder = order.items?.some((item) => item.isCustomPrint);
   const statusCfg = getOrderStatusConfig(order.orderStatus);
   const isSubmittingReturn = uploadingImages || returnMutation.isPending;
   const isCOD = order?.paymentInfo?.method?.toLowerCase() === "cod";
@@ -930,6 +939,12 @@ export function OrderDetailPage() {
                       <p className="font-bold text-xs sm:text-sm text-slate-900 truncate">
                         {item.name}
                       </p>
+                      {item.isCustomPrint && (
+                        <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-violet-50 border border-violet-200 px-2 py-1 text-[10px] font-bold text-violet-700">
+                          <FiPrinter size={10} />
+                          Custom Print
+                        </div>
+                      )}
                       <div className="flex flex-wrap gap-1 mt-0.5">
                         {item.size && (
                           <span className="bg-slate-100 text-slate-700 text-[10px] font-bold px-1.5 py-0.5 rounded">
@@ -1040,42 +1055,47 @@ export function OrderDetailPage() {
             </div>
             {/* Actions Panel */}
             <div className="space-y-2">
-              {order.orderStatus === "delivered" && !hasReturnRequest && (
-                <div
-                  className={`rounded-xl border p-3 ${
-                    canReturn
-                      ? "border-emerald-200 bg-emerald-50"
-                      : "border-red-200 bg-red-50"
-                  }`}
-                >
-                  <p
-                    className={`text-xs font-bold ${
-                      canReturn ? "text-emerald-700" : "text-red-700"
+              {!isCustomPrintOrder &&
+                order.orderStatus === "delivered" &&
+                !hasReturnRequest && (
+                  <div
+                    className={`rounded-xl border p-3 ${
+                      canReturn
+                        ? "border-emerald-200 bg-emerald-50"
+                        : "border-red-200 bg-red-50"
                     }`}
                   >
-                    {canReturn
-                      ? `✓ Return available until ${formatDate(returnExpiryDate)}`
-                      : `✕ Return window expired on ${formatDate(returnExpiryDate)}`}
-                  </p>
-
-                  {canReturn && (
-                    <p className="mt-1 text-[11px] text-emerald-600">
-                      {daysLeft === 0
-                        ? "Last day to request a return."
-                        : `${daysLeft} day${daysLeft > 1 ? "s" : ""} remaining`}
+                    <p
+                      className={`text-xs font-bold ${
+                        canReturn ? "text-emerald-700" : "text-red-700"
+                      }`}
+                    >
+                      {canReturn
+                        ? `✓ Return available until ${formatDate(returnExpiryDate)}`
+                        : `✕ Return window expired on ${formatDate(returnExpiryDate)}`}
                     </p>
-                  )}
-                </div>
-              )}
+
+                    {canReturn && (
+                      <p className="mt-1 text-[11px] text-emerald-600">
+                        {daysLeft === 0
+                          ? "Last day to request a return."
+                          : `${daysLeft} day${daysLeft > 1 ? "s" : ""} remaining`}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+              {/* WhatsApp Support Button */}
               <button
                 onClick={() =>
                   openWhatsApp(orderSupportMessage(order.orderNumber))
                 }
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-500 text-slate-100 hover:bg-emerald-100 rounded-xl font-bold text-xs transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs transition-colors shadow-xs"
               >
                 <FaWhatsapp size={15} /> Contact Support
               </button>
 
+              {/* Invoice Download Button */}
               {order.invoiceNumber && (
                 <button
                   onClick={async () => {
@@ -1102,14 +1122,15 @@ export function OrderDetailPage() {
                       toast.error("Unable to download invoice");
                     }
                   }}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold text-xs transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-xl font-bold text-xs transition-colors shadow-xs"
                 >
                   <FiDownload size={14} />
                   Download Invoice
                 </button>
               )}
 
-              {canCancel && !hasReturnRequest && (
+              {/* Order Cancellation Button */}
+              {!isCustomPrintOrder && canCancel && !hasReturnRequest && (
                 <button
                   onClick={() => setShowCancelModal(true)}
                   className="w-full text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 rounded-xl font-bold text-xs py-2.5 flex items-center justify-center gap-1.5 transition-colors"
@@ -1118,18 +1139,21 @@ export function OrderDetailPage() {
                 </button>
               )}
 
-              {order.orderStatus === "delivered" &&
+              {/* Return Request Button */}
+              {!isCustomPrintOrder &&
+                order.orderStatus === "delivered" &&
                 !hasReturnRequest &&
                 canReturn && (
                   <button
                     onClick={() => setShowReturnModal(true)}
-                    className="w-full bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 rounded-xl font-bold text-xs py-2.5 flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full bg-amber-700 hover:bg-amber-800 text-white rounded-xl font-bold text-xs py-2.5 flex items-center justify-center gap-1.5 transition-colors shadow-xs"
                   >
                     Request Return
                   </button>
                 )}
 
-              {order.orderStatus === "delivered" && (
+              {/* Product Review Button */}
+              {order.orderStatus === "delivered" && !isCustomPrintOrder && (
                 <button
                   onClick={() => {
                     setSelectedItem(order.items[0]);

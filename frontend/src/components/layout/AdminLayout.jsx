@@ -26,19 +26,19 @@ import { useSelector } from "react-redux";
 
 const NAV_ITEMS = [
   { to: "/admin", icon: FiGrid, label: "Dashboard", end: true },
+  { to: "/admin/customers", icon: FiUsers, label: "Customers" },
   { to: "/admin/categories", icon: FiLayers, label: "Categories" },
   { to: "/admin/products", icon: FiPackage, label: "Products" },
-
   { to: "/admin/orders", icon: FiShoppingBag, label: "Orders" },
+  { to: "/admin/print-jobs", icon: FiPrinter, label: "Custom Orders" },
   { to: "/admin/returns", icon: FiRefreshCw, label: "Returns" },
-  { to: "/admin/print-jobs", icon: FiPrinter, label: "Print Jobs" },
-  { to: "/admin/customers", icon: FiUsers, label: "Customers" },
+
   { to: "/admin/reviews", icon: FiStar, label: "Reviews" },
   { to: "/admin/coupons", icon: FiTag, label: "Coupons" },
   { to: "/admin/banners", icon: FiImage, label: "Banners" },
 
   { to: "/admin/analytics", icon: FiBarChart2, label: "Analytics" },
-  { to: "/admin/inventory", icon: FiPackage, label: "Inventory" },
+  { to: "/admin/inventory", icon: FiPackage, label: "Stock" },
   { to: "/admin/cms", icon: FiFileText, label: "CMS Pages" },
   { to: "/admin/settings", icon: FiSettings, label: "Settings" },
 ];

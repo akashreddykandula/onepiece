@@ -9,6 +9,7 @@ const emailService = require("../services/emailService");
 const { getIO } = require("../socket");
 const path = require("path");
 const fs = require("fs");
+const CustomPrintOrder = require("../models/CustomPrintOrder");
 
 // POST /api/orders
 exports.createOrder = async (req, res, next) => {
@@ -415,6 +416,13 @@ exports.cancelOrder = async (req, res, next) => {
   try {
     const { reason } = req.body;
     const order = await Order.findById(req.params.id);
+    let customPrintOrder = null;
+
+    if (order.items.some((item) => item.isCustomPrint)) {
+      customPrintOrder = await CustomPrintOrder.findOne({
+        order: order._id,
+      });
+    }
     if (!order) return next(new AppError("Order not found.", 404));
 
     const isOwner =
@@ -603,8 +611,6 @@ exports.updateOrderStatus = async (req, res, next) => {
         order.paymentInfo.status = "paid";
         order.paymentInfo.paidAt = new Date();
       }
-
-      console.log("Status after:", order.paymentInfo.status);
     }
 
     await order.save();
@@ -706,6 +712,15 @@ exports.downloadInvoice = async (req, res, next) => {
       return next(new AppError("Order not found.", 404));
     }
 
+    const isCustomOrder = order.items.some((item) => item.isCustomPrint);
+    let customPrintOrder = null;
+
+    if (isCustomOrder) {
+      customPrintOrder = await CustomPrintOrder.findOne({
+        order: order._id,
+      });
+    }
+
     const isOwner =
       order.user &&
       req.user &&
@@ -737,6 +752,9 @@ exports.downloadInvoice = async (req, res, next) => {
     const NAVY = "#0A2A80";
     const GREY = "#64748B";
 
+    // Helper to format currency cleanly (PDFKit Standard Helvetica does not support '₹')
+    const formatCurrency = (amount) => `Rs. ${Number(amount).toFixed(2)}`;
+
     // ------------------------------------
     // 1. Header & Brand Section
     // ------------------------------------
@@ -762,30 +780,44 @@ exports.downloadInvoice = async (req, res, next) => {
       .fillColor("#111827")
       .fontSize(18)
       .font("Helvetica-Bold")
-      .text("TAX INVOICE", 380, 32, { align: "right" });
+      .text("TAX INVOICE", 380, 28, { align: "right" });
 
     doc
       .fontSize(9)
       .fillColor(GREY)
-      .text(`Invoice No : ${order.invoiceNumber || "-"}`, 380, 56, {
+      .text(`Invoice No : ${order.invoiceNumber || "-"}`, 380, 50, {
         align: "right",
       })
-      .text(`Order No : ${order.orderNumber}`, 380, 68, { align: "right" })
+      .text(`Order No : ${order.orderNumber}`, 380, 62, { align: "right" })
       .text(
         `Date : ${new Date(order.createdAt).toLocaleDateString("en-IN")}`,
         380,
-        80,
+        74,
         { align: "right" },
       );
 
+    // Custom Order Badge (Positioned cleanly inside header)
+    if (isCustomOrder) {
+      doc.roundedRect(410, 90, 150, 20, 10).fillAndStroke("#F3E8FF", "#A855F7");
+
+      doc
+        .fillColor("#7E22CE")
+        .font("Helvetica-Bold")
+        .fontSize(8.5)
+        .text("CUSTOM PRINT ORDER", 410, 96, {
+          width: 150,
+          align: "center",
+        });
+    }
+
     // Header Divider Line
-    doc.moveTo(35, 100).lineTo(560, 100).strokeColor("#E2E8F0").stroke();
+    doc.moveTo(35, 118).lineTo(560, 118).strokeColor("#E2E8F0").stroke();
 
     // ------------------------------------
     // 2. Seller & Customer Info
     // ------------------------------------
-    const startY = 110;
-    const boxHeight = 105;
+    const startY = 126;
+    const boxHeight = 100;
 
     // Seller Box
     doc
@@ -857,15 +889,14 @@ exports.downloadInvoice = async (req, res, next) => {
     doc.fillColor("white").font("Helvetica-Bold").fontSize(9);
 
     doc.text("Item Details", 45, tableTop + 6);
-    doc.text("Size", 305, tableTop + 6);
-    doc.text("Qty", 365, tableTop + 6);
-    doc.text("Price", 420, tableTop + 6);
-    doc.text("Amount", 485, tableTop + 6);
+    doc.text("Size", 295, tableTop + 6);
+    doc.text("Qty", 350, tableTop + 6);
+    doc.text("Price", 400, tableTop + 6);
+    doc.text("Amount", 480, tableTop + 6);
 
     let rowY = tableTop + 26;
-    const rowHeight = 44; // Compact row height with space for thumbnails
+    const rowHeight = 54; // Spaced out for double-thumbnails and labels
 
-    // Limit array visually if needed, though rowHeight dynamic spacing guarantees single-page layout for standard orders
     for (let index = 0; index < order.items.length; index++) {
       const item = order.items[index];
 
@@ -876,9 +907,17 @@ exports.downloadInvoice = async (req, res, next) => {
 
       // --- Thumbnail Image ---
       const imgBuffer = await fetchImageBuffer(item.image);
+      const approvedDesignBuffer = await fetchImageBuffer(
+        customPrintOrder?.previewImage?.url ||
+          customPrintOrder?.uploadedDesigns?.[0]?.url,
+      );
+
       const imgX = 42;
-      const imgY = rowY + 3;
+      const imgY = rowY + 4;
       const imgSize = 34;
+
+      // Default X position for text
+      let textX = imgX + imgSize + 10;
 
       if (imgBuffer) {
         try {
@@ -891,52 +930,96 @@ exports.downloadInvoice = async (req, res, next) => {
             .strokeColor("#CBD5E1")
             .lineWidth(0.5)
             .stroke();
+
+          // Render approved design thumbnail next to product thumbnail if present
+          if (item.isCustomPrint && approvedDesignBuffer) {
+            const designX = imgX + imgSize + 6;
+
+            try {
+              doc.save();
+              doc.roundedRect(designX, imgY, imgSize, imgSize, 4).clip();
+              doc.image(approvedDesignBuffer, designX, imgY, {
+                width: imgSize,
+                height: imgSize,
+              });
+              doc.restore();
+
+              doc
+                .roundedRect(designX, imgY, imgSize, imgSize, 4)
+                .strokeColor("#A855F7")
+                .lineWidth(1)
+                .stroke();
+
+              doc
+                .fillColor("#7E22CE")
+                .fontSize(5.5)
+                .font("Helvetica-Bold")
+                .text("APPROVED", designX, imgY + imgSize + 2, {
+                  width: imgSize,
+                  align: "center",
+                });
+
+              // Offset text position dynamically to prevent overlap
+              textX = designX + imgSize + 10;
+            } catch (e) {}
+          }
         } catch (e) {
-          // Fallback box on corrupt image
           doc
             .roundedRect(imgX, imgY, imgSize, imgSize, 4)
             .fillAndStroke("#E2E8F0", "#CBD5E1");
         }
       } else {
-        // Placeholder Box
         doc
           .roundedRect(imgX, imgY, imgSize, imgSize, 4)
           .fillAndStroke("#E2E8F0", "#CBD5E1");
       }
 
       // --- Item Details (Title, SKU, Color) ---
-      const textX = imgX + imgSize + 10;
+      let detailY = rowY + 4;
+
       doc.fillColor("#111827").font("Helvetica-Bold").fontSize(9);
-      doc.text(item.name, textX, rowY + 4, {
-        width: 210,
+      doc.text(item.name, textX, detailY, {
+        width: 285 - textX, // Constrain text inside details column
         height: 12,
         ellipsis: true,
       });
 
+      detailY += 13;
+
+      if (item.isCustomPrint) {
+        doc
+          .fillColor("#7E22CE")
+          .font("Helvetica-Bold")
+          .fontSize(7)
+          .text("✓ Approved Custom Design", textX, detailY);
+
+        detailY += 10;
+      }
+
       // SKU Code
       doc.font("Helvetica").fontSize(7.5).fillColor(GREY);
-      doc.text(`SKU: ${item.sku || "N/A"}`, textX, rowY + 18);
+      doc.text(`SKU: ${item.sku || "N/A"}`, textX, detailY);
+
+      detailY += 10;
 
       // Color Swatch + Label
       if (item.color) {
-        const swatchY = rowY + 30;
-        const colorHex = item.colorHex || "#64748B"; // Fallback color hex
+        const colorHex = item.colorHex || "#64748B";
 
-        // Vector Color Dot
         doc
-          .circle(textX + 4, swatchY + 3, 3.5)
+          .circle(textX + 4, detailY + 3, 3)
           .fillAndStroke(colorHex, "#94A3B8");
 
         doc
           .fillColor("#475569")
           .fontSize(7.5)
-          .text(item.color, textX + 12, swatchY);
+          .text(item.color, textX + 11, detailY);
       }
 
       // --- Size Badge ---
       const sizeText = String(item.size || "OS").toUpperCase();
-      const badgeX = 300;
-      const badgeY = rowY + 10;
+      const badgeX = 290;
+      const badgeY = rowY + 12;
 
       doc
         .roundedRect(badgeX, badgeY, 28, 16, 3)
@@ -949,11 +1032,14 @@ exports.downloadInvoice = async (req, res, next) => {
 
       // --- Quantity, Price, Amount ---
       doc.fillColor("#111827").font("Helvetica").fontSize(9);
-      doc.text(item.quantity.toString(), 365, rowY + 12);
-      doc.text(`₹${item.price.toFixed(2)}`, 410, rowY + 12);
+      doc.text(item.quantity.toString(), 350, rowY + 14);
+      doc.text(formatCurrency(item.price), 390, rowY + 14);
       doc
         .font("Helvetica-Bold")
-        .text(`₹${(item.price * item.quantity).toFixed(2)}`, 480, rowY + 12);
+        .text(formatCurrency(item.price * item.quantity), 465, rowY + 14, {
+          width: 85,
+          align: "right",
+        });
 
       rowY += rowHeight;
     }
@@ -989,33 +1075,33 @@ exports.downloadInvoice = async (req, res, next) => {
         .font(bold ? "Helvetica-Bold" : "Helvetica")
         .fontSize(8.5);
       doc.text(label, summaryX + 12, sy);
-      doc.text(value, summaryX + summaryWidth - 75, sy, {
-        width: 63,
+      doc.text(value, summaryX + summaryWidth - 90, sy, {
+        width: 78,
         align: "right",
       });
       sy += 15;
     };
 
-    drawSummaryRow("Subtotal", `₹${order.pricing.subtotal.toFixed(2)}`);
+    drawSummaryRow("Subtotal", formatCurrency(order.pricing.subtotal));
     drawSummaryRow(
       "Shipping",
       order.pricing.shippingCost === 0
         ? "FREE"
-        : `₹${order.pricing.shippingCost.toFixed(2)}`,
+        : formatCurrency(order.pricing.shippingCost),
       order.pricing.shippingCost === 0 ? "#16A34A" : "#334155",
     );
 
     if (order.pricing.couponDiscount > 0) {
       drawSummaryRow(
         "Discount",
-        `- ₹${order.pricing.couponDiscount.toFixed(2)}`,
+        `- ${formatCurrency(order.pricing.couponDiscount)}`,
         "#16A34A",
       );
     }
 
     drawSummaryRow(
       `GST (${order.pricing.gstPercentage}%)`,
-      `₹${order.pricing.gst.toFixed(2)}`,
+      formatCurrency(order.pricing.gst),
     );
 
     // Inner Summary Divider
@@ -1030,10 +1116,10 @@ exports.downloadInvoice = async (req, res, next) => {
     doc.font("Helvetica-Bold").fontSize(10).fillColor("#111827");
     doc.text("Grand Total", summaryX + 12, sy);
     doc.text(
-      `₹${order.pricing.total.toFixed(2)}`,
-      summaryX + summaryWidth - 85,
+      formatCurrency(order.pricing.total),
+      summaryX + summaryWidth - 100,
       sy,
-      { width: 73, align: "right" },
+      { width: 88, align: "right" },
     );
 
     // Payment Status Pill
@@ -1087,7 +1173,11 @@ exports.downloadInvoice = async (req, res, next) => {
       .font("Helvetica")
       .fillColor("#475569")
       .fontSize(7.5)
-      .text("• Returns allowed within 7 days per policy.", 35, colY + 12)
+      .text(
+        "• Returns allowed within 7 days per policy, No returns for custom orders",
+        35,
+        colY + 12,
+      )
       .text("• Computer-generated; signature not required.", 35, colY + 22);
 
     // Support Column (Right)
@@ -1100,8 +1190,8 @@ exports.downloadInvoice = async (req, res, next) => {
       .font("Helvetica")
       .fillColor("#475569")
       .fontSize(7.5)
-      .text("Email: support@onepiece.com", 350, colY + 12)
-      .text("Phone: +91 98765 43210", 350, colY + 22);
+      .text("Email: onepiece.fashion99@gmail.com", 350, colY + 12)
+      .text("Phone: +91 81212 18099", 350, colY + 22);
 
     // Page Number Footer
     doc
