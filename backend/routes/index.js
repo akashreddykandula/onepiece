@@ -82,7 +82,15 @@ orderRouter.post("/", optionalAuth, orderCtrl.createOrder);
 orderRouter.post("/track", orderCtrl.trackOrder);
 orderRouter.get("/my", protect, orderCtrl.getMyOrders);
 orderRouter.get("/admin/all", ...admin, orderCtrl.getAllOrders);
+orderRouter.get("/:id", optionalAuth, orderCtrl.getOrder);
 orderRouter.get("/:id/invoice", protect, orderCtrl.downloadInvoice);
+
+orderRouter.get(
+  "/:id/shipping-label",
+  protect,
+  orderCtrl.downloadShippingLabel,
+);
+
 orderRouter.get("/:id", optionalAuth, orderCtrl.getOrder);
 orderRouter.get("/:id/invoice", protect, orderCtrl.downloadInvoice);
 orderRouter.put("/:id/cancel", optionalAuth, orderCtrl.cancelOrder);

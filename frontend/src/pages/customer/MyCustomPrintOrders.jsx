@@ -1,8 +1,9 @@
 import { Helmet } from "react-helmet-async";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { paymentAPI, customPrintAPI } from "@services/api";
+import { socket } from "@services/socket";
 
 import toast from "react-hot-toast";
 import {
@@ -53,6 +54,19 @@ export default function MyCustomPrintOrders({ orders = [] }) {
       toast.error(err.response?.data?.message || "Something went wrong.");
     },
   });
+  useEffect(() => {
+    const refreshOrders = () => {
+      queryClient.invalidateQueries({
+        queryKey: ["my-custom-print-orders"],
+      });
+    };
+
+    socket.on("customPrintUpdated", refreshOrders);
+
+    return () => {
+      socket.off("customPrintUpdated", refreshOrders);
+    };
+  }, [queryClient]);
 
   const handlePayment = async (order) => {
     try {

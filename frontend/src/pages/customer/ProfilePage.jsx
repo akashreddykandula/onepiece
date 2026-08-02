@@ -34,8 +34,8 @@ const TABS = [
   { id: "profile", label: "My Profile", icon: FiUser },
   { id: "security", label: "Security", icon: FiLock },
   { id: "addresses", label: "Addresses", icon: FiMapPin },
-  { id: "prints", label: "Custom Prints", icon: FiPrinter },
-  { id: "loyalty", label: "Loyalty Rewards", icon: FiStar },
+  // { id: "prints", label: "Custom Prints", icon: FiPrinter },
+  // { id: "loyalty", label: "Loyalty Rewards", icon: FiStar },
 ];
 
 // ─── Profile Tab ──────────────────────────────────────────────────────────────

@@ -196,6 +196,7 @@ export const customPrintAPI = {
       decision,
       feedback,
     }),
+  removePreview: (id) => api.delete(`/custom-print/admin/${id}/preview`),
 };
 
 export const notificationAPI = {

@@ -595,6 +595,21 @@ exports.updateOrderStatus = async (req, res, next) => {
       return next(new AppError("Invalid status.", 400));
 
     order.orderStatus = status;
+    if (trackingNumber) {
+      order.tracking.trackingNumber = trackingNumber;
+    }
+
+    if (courier) {
+      order.tracking.courier = courier;
+    }
+
+    if (trackingUrl) {
+      order.tracking.trackingUrl = trackingUrl;
+    }
+
+    if (estimatedDelivery) {
+      order.tracking.estimatedDelivery = estimatedDelivery;
+    }
     order.timeline.push({
       status,
       message:
@@ -614,8 +629,13 @@ exports.updateOrderStatus = async (req, res, next) => {
     }
 
     await order.save();
+    if (order.items.some((item) => item.isCustomPrint)) {
+      await CustomPrintOrder.findOneAndUpdate({ order: order._id }, { status });
+    }
     getIO().emit("orderStatusUpdated", {
       orderId: order._id,
+
+      status: order.orderStatus,
     });
     // User Notifications with dynamic wording
     if (order.user) {
@@ -1198,6 +1218,115 @@ exports.downloadInvoice = async (req, res, next) => {
       .fillColor("#94A3B8")
       .fontSize(8)
       .text("Page 1 of 1", 35, 805, { width: 525, align: "center" });
+
+    doc.end();
+  } catch (err) {
+    next(err);
+  }
+};
+exports.downloadShippingLabel = async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return next(new AppError("Order not found.", 404));
+    }
+
+    const doc = new PDFDocument({
+      size: "A6",
+      margin: 20,
+    });
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=ShippingLabel-${order.orderNumber}.pdf`,
+    );
+    res.setHeader("Content-Type", "application/pdf");
+
+    doc.pipe(res);
+
+    const PRIMARY = "#0A5ACB";
+
+    // Header
+    doc
+      .fillColor(PRIMARY)
+      .font("Helvetica-Bold")
+      .fontSize(18)
+      .text("ONE PIECE");
+
+    doc.fillColor("#666").fontSize(8).text("Shipping Label");
+
+    doc.moveDown();
+
+    // Order Number
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(11)
+      .fillColor("#000")
+      .text(`Order : #${order.orderNumber}`);
+
+    doc.moveDown(0.5);
+
+    // Payment Badge
+    const prepaid = String(order.paymentInfo?.method).toLowerCase() !== "cod";
+
+    doc
+      .roundedRect(20, 78, 80, 22, 5)
+      .fillAndStroke(
+        prepaid ? "#DCFCE7" : "#FEF3C7",
+        prepaid ? "#22C55E" : "#F59E0B",
+      );
+
+    doc
+      .fillColor(prepaid ? "#166534" : "#92400E")
+      .font("Helvetica-Bold")
+      .fontSize(10)
+      .text(prepaid ? "PREPAID" : "COD", 20, 85, {
+        width: 80,
+        align: "center",
+      });
+
+    doc.moveDown(2);
+
+    // Receiver
+    doc
+      .fillColor("#000")
+      .font("Helvetica-Bold")
+      .fontSize(12)
+      .text(order.shippingAddress.name);
+
+    doc.font("Helvetica").fontSize(10).text(order.shippingAddress.phone);
+
+    doc.moveDown(0.5);
+
+    doc.text(order.shippingAddress.line1);
+
+    if (order.shippingAddress.line2) {
+      doc.text(order.shippingAddress.line2);
+    }
+
+    doc.text(`${order.shippingAddress.city}, ${order.shippingAddress.state}`);
+
+    doc.text(
+      `${order.shippingAddress.pincode}, ${
+        order.shippingAddress.country || "India"
+      }`,
+    );
+
+    doc.moveDown();
+
+    doc
+      .font("Helvetica-Bold")
+      .text(`Amount : ₹${order.pricing.total.toFixed(2)}`);
+
+    doc.moveDown();
+
+    doc.strokeColor("#ddd").moveTo(20, 240).lineTo(280, 240).stroke();
+
+    doc.fontSize(8).fillColor("#666").text("Courier Use Only", 20, 250, {
+      align: "center",
+      width: 260,
+    });
 
     doc.end();
   } catch (err) {

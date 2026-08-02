@@ -13,6 +13,7 @@ const {
   updateStatus,
   uploadProof,
   uploadPreview,
+  removePreview,
   customerApproval,
 } = require("../controllers/customPrintController");
 
@@ -40,5 +41,6 @@ router.put(
   uploadPreview,
 );
 router.put("/admin/:id/proof", ...admin, upload.single("proof"), uploadProof);
+router.delete("/admin/:id/preview", ...admin, removePreview);
 
 module.exports = router;

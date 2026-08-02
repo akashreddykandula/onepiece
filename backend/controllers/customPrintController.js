@@ -3,7 +3,10 @@
 
 const CustomPrintOrder = require("../models/CustomPrintOrder");
 const Product = require("../models/Product");
-const { uploadToCloudinary } = require("../config/cloudinary");
+const {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} = require("../config/cloudinary");
 const { getIO } = require("../socket");
 
 exports.createOrder = async (req, res) => {
@@ -268,6 +271,43 @@ exports.uploadPreview = async (req, res) => {
       quotedPrice: order.quotedPrice,
       customerDecision: order.customerDecision,
     });
+    res.status(200).json({
+      success: true,
+      data: order,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+exports.removePreview = async (req, res) => {
+  try {
+    const order = await CustomPrintOrder.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (order.previewImage?.publicId) {
+      await deleteFromCloudinary(order.previewImage.publicId);
+    }
+
+    order.previewImage = undefined;
+
+    await order.save();
+
+    getIO().emit("customPrintUpdated", {
+      orderId: order._id,
+      status: order.status,
+      quotedPrice: order.quotedPrice,
+      customerDecision: order.customerDecision,
+    });
+
     res.status(200).json({
       success: true,
       data: order,

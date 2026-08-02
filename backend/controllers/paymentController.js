@@ -5,6 +5,7 @@ const Order = require("../models/Order");
 const CustomPrintOrder = require("../models/CustomPrintOrder");
 const { finalizeOrder } = require("./orderController");
 const { AppError } = require("../middleware/errorMiddleware");
+const { getIO } = require("../socket"); // <-- ADD THIS LINE
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -220,6 +221,13 @@ exports.verifyPayment = async (req, res, next) => {
     customOrder.status = "Printing";
 
     await customOrder.save();
+
+    getIO().emit("customPrintUpdated", {
+      orderId: customOrder._id,
+      status: customOrder.status,
+      quotedPrice: customOrder.quotedPrice,
+      customerDecision: customOrder.customerDecision,
+    });
 
     return res.json({
       success: true,

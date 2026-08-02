@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { FiSearch, FiEye } from "react-icons/fi";
+import { FiSearch, FiEye, FiCopy } from "react-icons/fi";
 import { orderAPI } from "@services/api";
 import { formatPrice, formatDate, getOrderStatusConfig } from "@utils/helpers";
 import PageLoader from "@components/ui/PageLoader";
@@ -45,6 +45,26 @@ export default function AdminOrders() {
 
   const orders = data?.orders || [];
   const pages = data?.pages || 1;
+  const copyShippingAddress = async (order) => {
+    const address = `
+${order.shippingAddress?.name}
+${order.shippingAddress?.phone}
+
+${order.shippingAddress?.line1}
+${order.shippingAddress?.line2 || ""}
+
+${order.shippingAddress?.city}, ${order.shippingAddress?.state}
+${order.shippingAddress?.pincode}
+${order.shippingAddress?.country || "India"}
+`.trim();
+
+    try {
+      await navigator.clipboard.writeText(address);
+      alert("Shipping address copied!");
+    } catch {
+      alert("Failed to copy address");
+    }
+  };
 
   return (
     <>
@@ -180,12 +200,23 @@ export default function AdminOrders() {
                             {formatDate(order.createdAt)}
                           </td>
                           <td className="py-3">
-                            <Link
-                              to={`/admin/orders/${order._id}`}
-                              className="btn-icon opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <FiEye size={14} />
-                            </Link>
+                            <div className="flex items-center gap-2 transition-all">
+                              <button
+                                onClick={() => copyShippingAddress(order)}
+                                title="Copy Shipping Address"
+                                className="btn-icon hover:bg-blue-100 hover:text-blue-700 transition-colors"
+                              >
+                                <FiCopy size={14} />
+                              </button>
+
+                              <Link
+                                to={`/admin/orders/${order._id}`}
+                                className="btn-icon hover:bg-blue-100 hover:text-blue-700 transition-colors"
+                                title="View Order"
+                              >
+                                <FiEye size={14} />
+                              </Link>
+                            </div>
                           </td>
                         </tr>
                       );

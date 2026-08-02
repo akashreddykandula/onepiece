@@ -3,15 +3,21 @@ import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FiArrowLeft, FiTruck, FiCheck, FiPackage, FiX } from "react-icons/fi";
-import { orderAPI } from "@services/api";
+import {
+  FiArrowLeft,
+  FiTruck,
+  FiCheck,
+  FiX,
+  FiCopy,
+  FiDownload,
+  FiFileText,
+} from "react-icons/fi";
+import api, { orderAPI } from "@services/api";
 import {
   formatPrice,
-  formatDate,
   formatDateTime,
   getOrderStatusConfig,
 } from "@utils/helpers";
-import { ORDER_TIMELINE_STEPS, ORDER_STATUSES } from "@constants";
 import PageLoader from "@components/ui/PageLoader";
 import toast from "react-hot-toast";
 
@@ -64,6 +70,80 @@ export default function AdminOrderDetail() {
     });
   };
 
+  // Helper Copy / Download Functions
+  const copyShippingAddress = () => {
+    const a = order.shippingAddress;
+    const address = [
+      a.name,
+      a.phone,
+      a.line1,
+      a.line2,
+      `${a.city}, ${a.state} - ${a.pincode}`,
+      a.country || "India",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    navigator.clipboard.writeText(address);
+    toast.success("Shipping address copied");
+  };
+
+  const copyShippingLabel = () => {
+    const a = order.shippingAddress;
+    const label = `
+Name : ${a.name}
+Phone : ${a.phone}
+
+${a.line1}
+${a.line2 || ""}
+
+${a.city}
+${a.state} - ${a.pincode}
+${a.country || "India"}
+
+Order : #${order.orderNumber}
+COD : ${order.paymentInfo?.method === "cod" ? "YES" : "NO"}
+Amount : ₹${order.pricing.total}
+`
+      .trim()
+      .replace(/\n{3,}/g, "\n\n");
+
+    navigator.clipboard.writeText(label);
+    toast.success("Shipping label copied");
+  };
+
+  const copyCustomerName = () => {
+    navigator.clipboard.writeText(order.shippingAddress.name);
+    toast.success("Customer name copied");
+  };
+
+  const copyCustomerPhone = () => {
+    navigator.clipboard.writeText(order.shippingAddress.phone);
+    toast.success("Phone number copied");
+  };
+
+  // Download Address Label PDF in Invoice Style
+  const downloadAddress = async () => {
+    try {
+      const response = await api.get(`/orders/${order._id}/shipping-label`, {
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `ShippingLabel-${order.orderNumber}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Shipping label PDF downloaded");
+    } catch {
+      toast.error("Unable to download shipping label");
+    }
+  };
+
   if (isLoading) return <PageLoader />;
   if (!order)
     return (
@@ -77,7 +157,6 @@ export default function AdminOrderDetail() {
 
   const cfg = getOrderStatusConfig(order.orderStatus);
   const nextStatuses = STATUS_TRANSITIONS[order.orderStatus] || [];
-  const isCancelled = ["cancelled", "returned"].includes(order.orderStatus);
 
   return (
     <>
@@ -85,6 +164,7 @@ export default function AdminOrderDetail() {
         <title>Order #{order.orderNumber} | Admin</title>
       </Helmet>
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-center gap-4 flex-wrap">
           <Link to="/admin/orders" className="btn-icon">
             <FiArrowLeft size={18} />
@@ -106,14 +186,14 @@ export default function AdminOrderDetail() {
                 setShowStatusForm(!showStatusForm);
                 setSelectedStatus(nextStatuses[0]);
               }}
-              className="btn-primary"
+              className="btn-primary flex items-center gap-2"
             >
               <FiTruck size={15} /> Update Status
             </button>
           )}
         </div>
 
-        {/* Status update form */}
+        {/* Status Update Form */}
         {showStatusForm && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -191,7 +271,7 @@ export default function AdminOrderDetail() {
               <button
                 onClick={handleStatusUpdate}
                 disabled={updateMutation.isPending}
-                className="btn-primary disabled:opacity-60"
+                className="btn-primary flex items-center gap-1.5 disabled:opacity-60"
               >
                 {updateMutation.isPending ? (
                   "Updating…"
@@ -203,7 +283,7 @@ export default function AdminOrderDetail() {
               </button>
               <button
                 onClick={() => setShowStatusForm(false)}
-                className="btn-ghost"
+                className="btn-ghost flex items-center gap-1.5"
               >
                 <FiX size={15} /> Cancel
               </button>
@@ -212,9 +292,9 @@ export default function AdminOrderDetail() {
         )}
 
         <div className="grid lg:grid-cols-3 gap-5">
-          {/* Left: items + timeline */}
+          {/* Left Column: Items + Timeline */}
           <div className="lg:col-span-2 space-y-5">
-            {/* Items */}
+            {/* Items Card */}
             <div className="card p-6">
               <h2 className="font-semibold text-gray-900 mb-4">
                 Order Items ({order.items?.length})
@@ -268,7 +348,8 @@ export default function AdminOrderDetail() {
                   </div>
                 ))}
               </div>
-              {/* Pricing */}
+
+              {/* Pricing Breakdown */}
               <div className="mt-4 pt-4 border-t border-gray-100 space-y-1.5">
                 <div className="flex justify-between text-sm text-gray-500">
                   <span>Subtotal</span>
@@ -303,7 +384,7 @@ export default function AdminOrderDetail() {
               </div>
             </div>
 
-            {/* Timeline */}
+            {/* Timeline Card */}
             <div className="card p-6">
               <h2 className="font-semibold text-gray-900 mb-4">
                 Order Timeline
@@ -335,24 +416,31 @@ export default function AdminOrderDetail() {
             </div>
           </div>
 
-          {/* Right: customer, payment, shipping */}
+          {/* Right Column: Customer, Payment, Shipping */}
           <div className="space-y-5">
+            {/* Customer Details */}
             <div className="card p-5">
               <h3 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">
                 Customer
               </h3>
               <p className="font-medium text-gray-900">
-                {order.user?.name || order.guestInfo?.name || "Guest"}
+                {order.user?.name ||
+                  order.guestInfo?.name ||
+                  order.shippingAddress?.name ||
+                  "Guest"}
               </p>
               <p className="text-xs text-gray-500 mt-0.5">
-                {order.user?.email || order.guestInfo?.email}
+                {order.user?.email ||
+                  order.guestInfo?.email ||
+                  order.shippingAddress?.email ||
+                  "No email"}
               </p>
               <p className="text-xs text-gray-500">
                 {order.shippingAddress?.phone}
               </p>
               {order.user && (
                 <Link
-                  to={`/admin/customers`}
+                  to="/admin/customers"
                   className="text-xs text-brand-600 mt-2 inline-block hover:text-brand-800"
                 >
                   View Customer →
@@ -360,6 +448,7 @@ export default function AdminOrderDetail() {
               )}
             </div>
 
+            {/* Payment Details */}
             <div className="card p-5">
               <h3 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">
                 Payment
@@ -374,7 +463,13 @@ export default function AdminOrderDetail() {
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-500">Status</span>
                   <span
-                    className={`font-bold ${order.paymentInfo?.status === "paid" ? "text-green-600" : order.paymentInfo?.status === "failed" ? "text-red-600" : "text-amber-600"}`}
+                    className={`font-bold ${
+                      order.paymentInfo?.status === "paid"
+                        ? "text-green-600"
+                        : order.paymentInfo?.status === "failed"
+                          ? "text-red-600"
+                          : "text-amber-600"
+                    }`}
                   >
                     {(order.paymentInfo?.status || "pending").toUpperCase()}
                   </span>
@@ -390,23 +485,57 @@ export default function AdminOrderDetail() {
               </div>
             </div>
 
-            <div className="card p-5">
-              <h3 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">
+            {/* Ship To Section with Clean Button Layout */}
+            <div className="card p-5 space-y-4">
+              <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
                 Ship To
               </h3>
-              <p className="font-medium text-sm text-gray-900">
-                {order.shippingAddress?.name}
-              </p>
-              <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                {order.shippingAddress?.line1}
-                {order.shippingAddress?.line2 &&
-                  `, ${order.shippingAddress.line2}`}
-                <br />
-                {order.shippingAddress?.city}, {order.shippingAddress?.state} –{" "}
-                {order.shippingAddress?.pincode}
-              </p>
+
+              <div>
+                <p className="font-medium text-sm text-gray-900">
+                  {order.shippingAddress?.name}
+                </p>
+                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                  {order.shippingAddress?.line1}
+                  {order.shippingAddress?.line2 &&
+                    `, ${order.shippingAddress.line2}`}
+                  <br />
+                  {order.shippingAddress?.city}, {order.shippingAddress?.state}{" "}
+                  – {order.shippingAddress?.pincode}
+                  <br />
+                  Phone: {order.shippingAddress?.phone}
+                </p>
+              </div>
+
+              {/* Action Buttons Grid */}
+              <div className="pt-2 border-t border-gray-100 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={copyShippingAddress}
+                    className="flex items-center justify-center gap-1 text-xs px-3 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-colors font-medium"
+                  >
+                    <FiCopy size={12} /> Address
+                  </button>
+                  <button
+                    onClick={copyShippingLabel}
+                    className="flex items-center justify-center gap-1 text-xs px-3 py-2 rounded-lg border border-brand-200 text-brand-800 hover:bg-brand-50 transition-colors font-medium"
+                  >
+                    <FiFileText size={12} /> Label
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2"></div>
+
+                <button
+                  onClick={downloadAddress}
+                  className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-slate-800 text-white py-2 text-xs font-semibold hover:bg-slate-700 transition-colors"
+                >
+                  <FiDownload size={13} /> Download Address Label PDF
+                </button>
+              </div>
             </div>
 
+            {/* Tracking Info Card */}
             {order.tracking?.trackingNumber && (
               <div className="card p-5">
                 <h3 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">
@@ -425,7 +554,7 @@ export default function AdminOrderDetail() {
                     href={order.tracking.trackingUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs text-brand-600 underline mt-1 inline-block"
+                    className="text-xs text-brand-600 underline mt-1 inline-block hover:text-brand-800"
                   >
                     Track Package →
                   </a>
