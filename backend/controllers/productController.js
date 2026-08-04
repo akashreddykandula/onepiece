@@ -250,7 +250,6 @@ exports.createProduct = async (req, res, next) => {
 
 // PUT /api/products/:id
 exports.updateProduct = async (req, res, next) => {
-  console.log("✏️ updateProduct called");
 
   const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
@@ -271,7 +270,7 @@ exports.updateProduct = async (req, res, next) => {
     stock: product.stock,
     isInStock: product.isInStock,
   });
-  console.log("✅ productUpdated emitted");
+
   res.json({
     success: true,
     product,
