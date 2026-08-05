@@ -12,7 +12,10 @@ const BLUE_PRIMARY = "#0A5ACB";
 const BLUE_ELECTRIC = "#3B82F6";
 
 const fmt = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
-const appUrl = () => process.env.CLIENT_URL || "https://onepiecefashion.in";
+const appUrl = () => {
+  console.log("CLIENT_URL =", process.env.CLIENT_URL);
+  return process.env.CLIENT_URL || "https://onepiecefashion.in";
+};
 
 const baseTemplate = (content) => `
 <!DOCTYPE html>
