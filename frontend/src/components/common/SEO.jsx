@@ -25,38 +25,17 @@ export default function SEO({
       <meta property="og:description" content={description} />
       <meta property="og:image" content={image} />
       <meta property="og:url" content={url} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content="ONE PIECE Premium Fashion Store" />
+      <meta property="og:locale" content="en_IN" />
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          name: "ONE PIECE",
-          url: "https://onepiecefashion.in",
-          logo: "https://onepiecefashion.in/favicon.jpeg",
-          description:
-            "Premium clothing, oversized t-shirts, hoodies, custom print apparel and fashion collections.",
-          sameAs: ["https://www.instagram.com/your_instagram"],
-        })}
-      </script>
 
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: "ONE PIECE",
-          url: "https://onepiecefashion.in",
-          potentialAction: {
-            "@type": "SearchAction",
-            target: "https://onepiecefashion.in/search?q={search_term_string}",
-            "query-input": "required name=search_term_string",
-          },
-        })}
-      </script>
       <script type="application/ld+json">
         {JSON.stringify({
           "@context": "https://schema.org",
@@ -67,10 +46,10 @@ export default function SEO({
           description:
             "Premium fashion brand in India offering clothing, oversized t-shirts, hoodies and custom print apparel.",
           email: "onepiece.fashion99@gmail.com",
-          sameAs: [
-            "https://instagram.com/YOUR_INSTAGRAM",
-            "https://facebook.com/YOUR_FACEBOOK",
-          ],
+          //   sameAs: [
+          //     "https://instagram.com/YOUR_INSTAGRAM",
+          //     "https://facebook.com/YOUR_FACEBOOK",
+          //   ],
         })}
       </script>
       <script type="application/ld+json">
