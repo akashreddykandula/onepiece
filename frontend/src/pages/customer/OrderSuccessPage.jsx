@@ -159,7 +159,8 @@ export function OrderSuccessPage() {
               Order Confirmed!
             </h1>
             <p className="text-white/70 text-xs sm:text-sm">
-              Thank you for shopping with ONE PIECE
+              Thank you for shopping with ONE PIECE. Check your email for order
+              confirmation and shipping updates.
             </p>
             {order && (
               <p className="text-brand-300 font-mono font-bold mt-2 text-sm sm:text-base">
