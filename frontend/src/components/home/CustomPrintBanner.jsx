@@ -139,22 +139,24 @@ const stats = [
 function StatItem({ value, suffix, label, icon }) {
   const { count, ref } = useCountUp(value, 1800);
   return (
-    <div ref={ref} className="text-center">
-      <div className="text-3xl mb-2">{icon}</div>
-      <div className="font-display font-black text-4xl md:text-5xl text-brand-900">
+    <div ref={ref} className="text-center p-2">
+      <div className="text-2xl sm:text-3xl mb-1.5">{icon}</div>
+      <div className="font-display font-black text-2xl sm:text-3xl md:text-5xl text-brand-900 tracking-tight">
         {count.toLocaleString("en-IN")}
         {suffix}
       </div>
-      <p className="text-sm text-gray-500 mt-1 font-medium">{label}</p>
+      <p className="text-xs sm:text-sm text-gray-500 mt-1 font-medium leading-tight">
+        {label}
+      </p>
     </div>
   );
 }
 
 export function StatsSection() {
   return (
-    <section className="section-sm bg-white border-y border-gray-100">
-      <div className="container-op">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-6">
+    <section className="py-8 md:py-12 bg-white border-y border-gray-100">
+      <div className="container-op px-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 md:gap-6">
           {stats.map((s) => (
             <StatItem key={s.label} {...s} />
           ))}
@@ -163,7 +165,6 @@ export function StatsSection() {
     </section>
   );
 }
-
 // ─── Brand Story ──────────────────────────────────────────────────────────────
 export function BrandStory() {
   const { ref, inView } = useAnimateOnScroll();
