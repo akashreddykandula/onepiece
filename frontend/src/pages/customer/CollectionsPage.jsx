@@ -533,6 +533,11 @@ export default function CollectionsPage() {
             : sort === "trending"
               ? "Trending"
               : "All Collections";
+  const seoTitle = `${pageTitle} | ONE PIECE`;
+
+  const seoDescription = `Shop ${pageTitle.toLowerCase()} at ONE PIECE. Premium oversized t-shirts, hoodies, custom print apparel and fashion collections.`;
+
+  const seoKeywords = `${pageTitle}, premium clothing, oversized t shirts, hoodies, custom print, ONE PIECE fashion`;
 
   const activeFilterCount =
     (filters.sizes?.length || 0) +
@@ -557,7 +562,7 @@ export default function CollectionsPage() {
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "CollectionPage",
-            name: pageTitle,
+            name: seoTitle,
             description: seoDescription,
             url: `https://onepiecefashion.in${window.location.pathname}`,
           })}
