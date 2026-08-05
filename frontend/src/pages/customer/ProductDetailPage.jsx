@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import SEO from "@components/common/SEO";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
@@ -251,15 +252,53 @@ export default function ProductDetailPage() {
 
   return (
     <>
-      <Helmet>
-        <title>{p.name} | ONE PIECE</title>
-        <meta
-          name="description"
-          content={p.shortDescription || p.description?.slice(0, 160)}
+      <>
+        <SEO
+          title={`${p.name} | ONE PIECE`}
+          description={
+            p.shortDescription ||
+            p.description?.slice(0, 160) ||
+            `Buy ${p.name} online from ONE PIECE Fashion.`
+          }
+          keywords={`${p.name}, ${p.category?.name}, ${p.brand}, premium clothing India, oversized t shirt, custom print`}
+          image={currentImg}
+          url={`https://onepiecefashion.in/product/${p.slug}`}
         />
-        <meta property="og:title" content={p.name} />
-        <meta property="og:image" content={currentImg} />
-      </Helmet>
+
+        <Helmet>
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Product",
+              name: p.name,
+              image: images.map((img) => img.url),
+              description: p.shortDescription || p.description?.slice(0, 160),
+              sku: p.sku,
+              brand: {
+                "@type": "Brand",
+                name: p.brand || "ONE PIECE",
+              },
+              offers: {
+                "@type": "Offer",
+                url: `https://onepiecefashion.in/product/${p.slug}`,
+                priceCurrency: "INR",
+                price: p.price,
+                availability: p.isInStock
+                  ? "https://schema.org/InStock"
+                  : "https://schema.org/OutOfStock",
+              },
+              aggregateRating:
+                p.reviewSummary?.count > 0
+                  ? {
+                      "@type": "AggregateRating",
+                      ratingValue: p.reviewSummary.average,
+                      reviewCount: p.reviewSummary.count,
+                    }
+                  : undefined,
+            })}
+          </script>
+        </Helmet>
+      </>
 
       {/* Breadcrumb */}
       <nav className="container-op pt-4 pb-2 px-4 overflow-x-auto no-scrollbar">

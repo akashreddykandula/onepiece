@@ -1,8 +1,7 @@
 import { lazy, Suspense } from "react";
-import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { productAPI, bannerAPI, categoryAPI } from "@services/api";
-import { APP_NAME, APP_TAGLINE } from "@constants";
+import SEO from "@components/common/SEO";
 
 // Sections (lazy-loaded for performance)
 const PromoPopup = lazy(() => import("@components/home/PromoPopup"));
@@ -86,17 +85,12 @@ export default function HomePage() {
 
   return (
     <>
-      <Helmet>
-        <title>
-          {APP_NAME} — {APP_TAGLINE}
-        </title>
-        <meta
-          name="description"
-          content="Shop the latest fashion at ONE PIECE. Premium clothing, custom prints, and exclusive collections. Free shipping on orders above ₹999."
-        />
-        <meta property="og:title" content={`${APP_NAME} — ${APP_TAGLINE}`} />
-        <meta property="og:type" content="website" />
-      </Helmet>
+      <SEO
+        title="ONE PIECE | Premium Clothing Store in India"
+        description="Shop premium men's & women's clothing, oversized t-shirts, hoodies, custom print apparel, and exclusive fashion collections from ONE PIECE."
+        keywords="premium clothing India, oversized t shirts, custom print t shirts, men's fashion, women's fashion, hoodies, streetwear"
+        url="https://onepiecefashion.in"
+      />
 
       <Suspense
         fallback={<div className="h-screen bg-brand-900 animate-pulse" />}

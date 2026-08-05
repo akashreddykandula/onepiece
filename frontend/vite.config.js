@@ -4,6 +4,7 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react()],
+
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -18,6 +19,7 @@ export default defineConfig({
       "@styles": path.resolve(__dirname, "./src/styles"),
     },
   },
+
   server: {
     port: 5173,
     proxy: {
@@ -27,6 +29,7 @@ export default defineConfig({
       },
     },
   },
+
   build: {
     rollupOptions: {
       output: {

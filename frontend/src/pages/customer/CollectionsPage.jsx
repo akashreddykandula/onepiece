@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { socket } from "@services/socket";
+import SEO from "@components/common/SEO";
 import {
   FiFilter,
   FiX,
@@ -320,58 +321,6 @@ function FilterPanel({
             </label>
           </div>
         </FilterSection>
-
-        {/* Rating */}
-        {/* <FilterSection title="Rating">
-          <div className="space-y-2.5 pt-1">
-            {[4, 3, 2].map((r) => {
-              const isSelected = filters.rating === String(r);
-              return (
-                <label
-                  key={r}
-                  className="flex items-center gap-3 cursor-pointer group select-none"
-                >
-                  <div
-                    className={`w-4 h-4 rounded-full border transition-all flex items-center justify-center ${
-                      isSelected
-                        ? "border-gray-900 bg-gray-900"
-                        : "border-gray-300 group-hover:border-gray-400 bg-white"
-                    }`}
-                  >
-                    {isSelected && (
-                      <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                    )}
-                  </div>
-                  <input
-                    type="radio"
-                    name="rating"
-                    checked={isSelected}
-                    onChange={() =>
-                      setFilter(
-                        "rating",
-                        filters.rating === String(r) ? "" : String(r),
-                      )
-                    }
-                    className="sr-only"
-                  />
-                  <span className="flex items-center gap-1.5 text-xs text-gray-700">
-                    <span className="flex items-center text-amber-400 tracking-tight">
-                      {[...Array(5)].map((_, i) => (
-                        <span
-                          key={i}
-                          className={i < r ? "text-amber-400" : "text-gray-200"}
-                        >
-                          ★
-                        </span>
-                      ))}
-                    </span>
-                    <span className="text-gray-500 font-medium">& above</span>
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        </FilterSection> */}
       </div>
 
       {/* Drawer Mobile Footer Apply Button */}
@@ -440,6 +389,7 @@ export default function CollectionsPage() {
     };
   }, [queryClient]);
   const { cat } = useParams();
+
   const [searchParams] = useSearchParams();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const gridRef = useRef(null);
@@ -595,12 +545,23 @@ export default function CollectionsPage() {
 
   return (
     <>
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        keywords={seoKeywords}
+        url={`https://onepiecefashion.in${window.location.pathname}`}
+      />
+
       <Helmet>
-        <title>{pageTitle} | ONE PIECE Fashion</title>
-        <meta
-          name="description"
-          content={`Shop ${pageTitle} at ONE PIECE. Premium fashion, fast delivery.`}
-        />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: pageTitle,
+            description: seoDescription,
+            url: `https://onepiecefashion.in${window.location.pathname}`,
+          })}
+        </script>
       </Helmet>
 
       {/* Collection Hero Banner */}
