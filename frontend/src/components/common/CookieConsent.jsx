@@ -23,71 +23,62 @@ export default function CookieConsent() {
     setVisible(false);
   };
 
-  if (!visible) return null;
-
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ y: 120, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 120, opacity: 0 }}
-        transition={{ duration: 0.35 }}
-        className="fixed bottom-4 left-1/2 z-[9999] w-[95%] max-w-xl -translate-x-1/2"
-      >
-        <div className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white/95 shadow-2xl backdrop-blur-xl">
-          {/* Top Accent */}
+      {visible && (
+        <motion.div
+          initial={{ y: 50, opacity: 0, scale: 0.95 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: 50, opacity: 0, scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+          className="fixed bottom-3 inset-x-3 z-[9999] sm:bottom-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md"
+        >
+          <div className="relative overflow-hidden rounded-2xl border border-sky-100 bg-white/95 p-3.5 shadow-xl backdrop-blur-md sm:p-4">
+            {/* Subtle Accent Line */}
+            <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-sky-400 to-blue-400" />
 
-          <div className="h-1 w-full bg-gradient-to-r from-brand-900 via-blue-500 to-brand-700" />
-
-          <div className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-50">
-                <span className="text-3xl">🍪</span>
+            <div className="flex items-center gap-3">
+              {/* Small Cookie Badge */}
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-lg border border-sky-100">
+                🍪
               </div>
 
-              <div className="flex-1">
-                <h3 className="font-display text-xl font-bold text-slate-900">
-                  Your Privacy Matters
-                </h3>
-
-                <p className="mt-2 text-sm leading-7 text-slate-600">
-                  ONE PIECE uses essential cookies to keep your account secure,
-                  remember your cart, wishlist, preferences, and provide a
-                  smooth premium shopping experience.
+              {/* Compact Text */}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-slate-600 line-clamp-2 leading-tight">
+                  We use cookies for account security, cart & shopping
+                  experience.{" "}
+                  <Link
+                    to="/pages/cookie-policy"
+                    className="font-semibold text-sky-600 hover:underline inline-block"
+                  >
+                    Policy
+                  </Link>
                 </p>
-
-                <p className="mt-2 text-xs text-slate-500">
-                  You can change your cookie preferences anytime from the
-                  Privacy Settings page.
-                </p>
-
-                <Link
-                  to="/pages/cookie-policy"
-                  className="mt-3 inline-flex items-center text-sm font-semibold text-brand-900 hover:underline"
-                >
-                  Learn More →
-                </Link>
               </div>
             </div>
 
-            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <button
+            {/* Compact Action Buttons */}
+            <div className="mt-3 flex items-center gap-2">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
                 onClick={essentialOnly}
-                className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                className="flex-1 rounded-lg border border-sky-200 bg-white py-1.5 text-[11px] font-semibold text-sky-700 transition hover:bg-sky-50"
               >
-                Essential Only
-              </button>
+                Essential
+              </motion.button>
 
-              <button
+              <motion.button
+                whileTap={{ scale: 0.95 }}
                 onClick={acceptAll}
-                className="rounded-xl bg-brand-900 px-6 py-3 text-sm font-bold text-white transition hover:bg-brand-800"
+                className="flex-1 rounded-lg bg-sky-500 py-1.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-sky-600"
               >
-                Accept All Cookies
-              </button>
+                Accept All
+              </motion.button>
             </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
     </AnimatePresence>
   );
 }
