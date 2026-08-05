@@ -307,8 +307,8 @@ export function OrdersPage() {
             onClick={() => setActiveTab("orders")}
             className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
               activeTab === "orders"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-brand-900 text-white shadow-sm"
+                : "bg-transparent text-slate-600 hover:text-brand-900 hover:bg-sky-50/50"
             }`}
           >
             Regular Orders
@@ -318,8 +318,8 @@ export function OrdersPage() {
             onClick={() => setActiveTab("custom")}
             className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
               activeTab === "custom"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-brand-900 text-white shadow-sm"
+                : "bg-transparent text-slate-600 hover:text-brand-900 hover:bg-sky-50/50"
             }`}
           >
             <FiPrinter size={13} />
