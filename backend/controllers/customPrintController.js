@@ -1,6 +1,4 @@
-// controllers/customPrintController.js
 "use strict";
-
 const CustomPrintOrder = require("../models/CustomPrintOrder");
 const Product = require("../models/Product");
 const {
@@ -8,6 +6,7 @@ const {
   deleteFromCloudinary,
 } = require("../config/cloudinary");
 const { getIO } = require("../socket");
+const emailService = require("../services/emailService");
 
 exports.createOrder = async (req, res) => {
   try {
@@ -18,7 +17,6 @@ exports.createOrder = async (req, res) => {
       selectedPrintArea,
       selectedSide,
       designTransform,
-
       quantity,
       customerNotes,
       customerName,
@@ -27,7 +25,6 @@ exports.createOrder = async (req, res) => {
       shippingAddress,
       printText,
     } = req.body;
-
     let color = selectedColor;
     if (typeof selectedColor === "string") {
       try {
@@ -36,7 +33,6 @@ exports.createOrder = async (req, res) => {
         color = { name: selectedColor, hex: "#FFFFFF" };
       }
     }
-
     let parsedTransform = { position: { x: 0, y: 0 }, scale: 1, rotation: 0 };
     if (typeof designTransform === "string") {
       try {
@@ -48,7 +44,6 @@ exports.createOrder = async (req, res) => {
       parsedTransform = designTransform;
     }
     let parsedShippingAddress = {};
-
     if (typeof shippingAddress === "string") {
       try {
         parsedShippingAddress = JSON.parse(shippingAddress);
@@ -67,7 +62,6 @@ exports.createOrder = async (req, res) => {
         });
       }
     }
-
     let uploadedDesigns = [];
     if (req.files?.length) {
       uploadedDesigns = await Promise.all(
@@ -83,31 +77,26 @@ exports.createOrder = async (req, res) => {
         }),
       );
     }
-
     const order = await CustomPrintOrder.create({
       customer: req.user?._id || null,
-
       customerName,
       customerPhone,
       customerEmail,
-
       shippingAddress: parsedShippingAddress,
-
       printText,
-
       product: product || null,
-
       selectedColor: color,
       selectedSize,
       selectedPrintArea,
       selectedSide: selectedSide || "Front",
-
       designTransform: parsedTransform,
-
       quantity,
       customerNotes,
       uploadedDesigns,
     });
+
+    // --- Send Email Notifications ---
+    emailService.sendCustomPrintReceived(order).catch(console.error);
 
     res.status(201).json({
       success: true,
@@ -128,7 +117,6 @@ exports.getMyOrders = async (req, res) => {
     const orders = await CustomPrintOrder.find({ customer: req.user._id })
       .populate("product")
       .sort({ createdAt: -1 });
-
     res.status(200).json({ success: true, count: orders.length, data: orders });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -141,7 +129,6 @@ exports.getAllOrders = async (req, res) => {
       .populate("customer", "name email")
       .populate("product", "name images")
       .sort({ createdAt: -1 });
-
     res.status(200).json({ success: true, count: orders.length, data: orders });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -153,13 +140,11 @@ exports.getOrderById = async (req, res) => {
     const order = await CustomPrintOrder.findById(req.params.id)
       .populate("customer", "name email")
       .populate("product");
-
     if (!order) {
       return res
         .status(404)
         .json({ success: false, message: "Order not found" });
     }
-
     res.status(200).json({
       success: true,
       data: order,
@@ -173,17 +158,16 @@ exports.updateStatus = async (req, res) => {
   try {
     const { status, quotedPrice, designerNotes } = req.body;
     const order = await CustomPrintOrder.findById(req.params.id);
-
     if (!order) {
       return res
         .status(404)
         .json({ success: false, message: "Order not found" });
     }
+    const previousStatus = order.status;
 
     if (status) order.status = status;
     if (quotedPrice !== undefined) order.quotedPrice = quotedPrice;
     if (designerNotes !== undefined) order.designerNotes = designerNotes;
-
     await order.save();
 
     getIO().emit("customPrintUpdated", {
@@ -192,6 +176,17 @@ exports.updateStatus = async (req, res) => {
       quotedPrice: order.quotedPrice,
       customerDecision: order.customerDecision,
     });
+
+    // --- Send Status Updates & Payment Reminders ---
+    if (status && status !== previousStatus) {
+      if (status === "Payment Pending") {
+        emailService.sendCustomPrintPaymentReminder(order).catch(console.error);
+      } else {
+        emailService
+          .sendCustomPrintStatusUpdate(order, status)
+          .catch(console.error);
+      }
+    }
 
     res.status(200).json({
       success: true,
@@ -210,67 +205,76 @@ exports.uploadProof = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Order not found" });
     }
-
     if (req.file) {
       const uploaded = await uploadToCloudinary(req.file.buffer, {
         folder: "custom-print/proofs",
       });
-
       order.proofImage = {
         url: uploaded.secure_url,
         publicId: uploaded.public_id,
       };
       order.status = "Waiting Approval";
       await order.save();
+
       getIO().emit("customPrintUpdated", {
         orderId: order._id,
         status: order.status,
         quotedPrice: order.quotedPrice,
         customerDecision: order.customerDecision,
       });
-    }
 
+      // --- Notify Customer Proof is Ready ---
+      emailService.sendCustomPrintPreviewUploaded(order).catch(console.error);
+
+      emailService
+        .sendAdminCustomPrintStatusUpdate(order, "Waiting Approval")
+        .catch(console.error);
+    }
     res.status(200).json({ success: true, data: order });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 exports.uploadPreview = async (req, res) => {
   try {
     const order = await CustomPrintOrder.findById(req.params.id);
-
     if (!order) {
       return res.status(404).json({
         success: false,
         message: "Order not found",
       });
     }
-
     if (!req.file) {
       return res.status(400).json({
         success: false,
         message: "Please upload a preview image",
       });
     }
-
     const uploaded = await uploadToCloudinary(req.file.buffer, {
       folder: "custom-print/previews",
     });
-
     order.previewImage = {
       url: uploaded.secure_url,
       publicId: uploaded.public_id,
     };
-
     order.status = "Waiting Approval";
-
     await order.save();
+
     getIO().emit("customPrintUpdated", {
       orderId: order._id,
       status: order.status,
       quotedPrice: order.quotedPrice,
       customerDecision: order.customerDecision,
     });
+
+    // --- Notify Customer Preview is Ready ---
+    emailService.sendCustomPrintPreviewUploaded(order).catch(console.error);
+
+    emailService
+      .sendAdminCustomPrintStatusUpdate(order, "Waiting Approval")
+      .catch(console.error);
+
     res.status(200).json({
       success: true,
       data: order,
@@ -282,23 +286,20 @@ exports.uploadPreview = async (req, res) => {
     });
   }
 };
+
 exports.removePreview = async (req, res) => {
   try {
     const order = await CustomPrintOrder.findById(req.params.id);
-
     if (!order) {
       return res.status(404).json({
         success: false,
         message: "Order not found",
       });
     }
-
     if (order.previewImage?.publicId) {
       await deleteFromCloudinary(order.previewImage.publicId);
     }
-
     order.previewImage = undefined;
-
     await order.save();
 
     getIO().emit("customPrintUpdated", {
@@ -319,52 +320,54 @@ exports.removePreview = async (req, res) => {
     });
   }
 };
+
 exports.customerApproval = async (req, res) => {
   try {
     const { decision, feedback = "" } = req.body;
-
     const order = await CustomPrintOrder.findById(req.params.id);
-
     if (!order) {
       return res.status(404).json({
         success: false,
         message: "Order not found",
       });
     }
-
     order.customerDecision = decision;
     order.customerFeedback = feedback;
-
     switch (decision) {
       case "Approved":
         order.customerApproved = true;
         order.status = "Payment Pending";
         break;
-
       case "Modification Requested":
         order.customerApproved = false;
         order.status = "Reviewing";
         break;
-
       case "Rejected":
         order.customerApproved = false;
         order.status = "Rejected";
         break;
-
       default:
         return res.status(400).json({
           success: false,
           message: "Invalid decision",
         });
     }
-
     await order.save();
+
     getIO().emit("customPrintUpdated", {
       orderId: order._id,
       status: order.status,
       quotedPrice: order.quotedPrice,
       customerDecision: order.customerDecision,
     });
+
+    // --- Notify Customer & Admin ---
+    emailService
+      .sendCustomPrintDecisionConfirmation(order)
+      .catch(console.error);
+    emailService
+      .sendAdminCustomPrintStatusUpdate(order, order.status)
+      .catch(console.error);
 
     res.status(200).json({
       success: true,

@@ -293,6 +293,9 @@ exports.finalizeOrder = async (orderId, paymentData) => {
     emailService
       .sendOrderConfirmation(populatedOrder)
       .catch((e) => console.error("Order email error:", e.message));
+    emailService
+      .sendAdminNewOrder(populatedOrder)
+      .catch((e) => console.error("Admin order email error:", e.message));
 
     if (order.user) {
       await Notification.create({

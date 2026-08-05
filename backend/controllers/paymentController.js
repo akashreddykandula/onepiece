@@ -6,6 +6,7 @@ const CustomPrintOrder = require("../models/CustomPrintOrder");
 const { finalizeOrder } = require("./orderController");
 const { AppError } = require("../middleware/errorMiddleware");
 const { getIO } = require("../socket"); // <-- ADD THIS LINE
+const emailService = require("../services/emailService");
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -221,6 +222,12 @@ exports.verifyPayment = async (req, res, next) => {
     customOrder.status = "Printing";
 
     await customOrder.save();
+    // Customer payment success
+    emailService
+      .sendCustomPrintStatusUpdate(customOrder, "Printing")
+      .catch(console.error);
+
+    emailService.sendAdminCustomPrintPaid(customOrder).catch(console.error);
 
     getIO().emit("customPrintUpdated", {
       orderId: customOrder._id,
@@ -245,6 +252,7 @@ exports.verifyPayment = async (req, res, next) => {
     razorpaySignature: razorpay_signature,
     paidAt: new Date(),
   });
+  emailService.sendAdminOrderPaid(order).catch(console.error);
 
   return res.json({
     success: true,
@@ -295,11 +303,13 @@ exports.initiateRefund = async (req, res, next) => {
 
   res.json({ success: true, refund });
 };
-
-// GET /api/payments/transactions (admin)
+// GET /api/payments/transactions
 exports.getTransactions = async (req, res) => {
   const { page = 1, limit = 20 } = req.query;
-  const orders = await Order.find({ "paymentInfo.status": { $ne: "pending" } })
+
+  const orders = await Order.find({
+    "paymentInfo.status": { $ne: "pending" },
+  })
     .populate("user", "name email")
     .sort({ createdAt: -1 })
     .skip((Number(page) - 1) * Number(limit))
@@ -309,5 +319,10 @@ exports.getTransactions = async (req, res) => {
   const total = await Order.countDocuments({
     "paymentInfo.status": { $ne: "pending" },
   });
-  res.json({ success: true, transactions: orders, total });
+
+  res.json({
+    success: true,
+    transactions: orders,
+    total,
+  });
 };

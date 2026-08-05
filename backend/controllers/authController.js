@@ -36,6 +36,11 @@ exports.register = async (req, res, next) => {
   emailService
     .sendWelcome(user)
     .catch((e) => console.error("Welcome email:", e.message));
+  emailService
+
+    .sendAdminNewUser(user)
+
+    .catch((e) => console.error("Admin new user email:", e.message));
 
   user.lastLogin = new Date();
   user.loginCount = 1;
