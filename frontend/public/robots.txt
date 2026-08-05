@@ -1,4 +1,17 @@
 User-agent: *
+
 Allow: /
+
+Disallow: /admin/
+Disallow: /checkout/
+Disallow: /profile/
+Disallow: /wishlist/
+Disallow: /cart/
+Disallow: /login/
+Disallow: /register/
+Disallow: /forgot-password/
+Disallow: /reset-password/
+Disallow: /order-success/
+Disallow: /orders/
 
 Sitemap: https://onepiecefashion.in/sitemap.xml
