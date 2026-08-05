@@ -231,34 +231,41 @@ export const useKeyPress = (key, callback) => {
 
 // ─── useAnimateOnScroll ───────────────────────────────────────────────────────
 export const useAnimateOnScroll = (options = {}) => {
-  const [ref, inView] = useInView({
+  const { ref, inView } = useInView({
     triggerOnce: true,
     threshold: 0.1,
     ...options,
   });
+
   return { ref, inView };
 };
 
 // ─── useCountUp ──────────────────────────────────────────────────────────────
 export const useCountUp = (end, duration = 2000, start = 0) => {
   const [count, setCount] = useState(start);
-  const [hasStarted, setHasStarted] = useState(false);
   const { ref, inView } = useAnimateOnScroll();
 
   useEffect(() => {
-    if (!inView || hasStarted) return;
-    setHasStarted(true);
-    const step = (end - start) / (duration / 16);
-    let current = start;
-    const timer = setInterval(() => {
-      current += step;
-      if (current >= end) {
+    if (!inView) return;
+
+    let startTime = null;
+
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+
+      setCount(Math.floor(progress * end));
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
         setCount(end);
-        clearInterval(timer);
-      } else setCount(Math.floor(current));
-    }, 16);
-    return () => clearInterval(timer);
-  }, [inView, end, start, duration, hasStarted]);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [inView, end, duration]);
 
   return { count, ref };
 };
