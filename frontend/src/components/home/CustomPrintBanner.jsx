@@ -370,7 +370,7 @@ export function InstagramGrid() {
           {igPhotos.map((photo, i) => (
             <motion.a
               key={i}
-              href="https://instagram.com"
+              href="https://www.instagram.com/onepiece_fashion_in?igsh=MXA0bzFibnNvdzJ1Ng%3D%3D"
               target="_blank"
               rel="noreferrer"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -394,7 +394,7 @@ export function InstagramGrid() {
         </div>
         <div className="text-center mt-8">
           <a
-            href="https://instagram.com"
+            href="https://www.instagram.com/onepiece_fashion_in?igsh=MXA0bzFibnNvdzJ1Ng%3D%3D"
             target="_blank"
             rel="noreferrer"
             className="btn-secondary"
