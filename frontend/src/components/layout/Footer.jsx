@@ -49,7 +49,11 @@ const footerLinks = {
 };
 
 const socials = [
-  { icon: FiInstagram, href: "https://instagram.com", label: "Instagram" },
+  {
+    icon: FiInstagram,
+    href: "https://www.instagram.com/onepiece_fashion_in?igsh=MXA0bzFibnNvdzJ1Ng%3D%3D",
+    label: "Instagram",
+  },
   { icon: FiFacebook, href: "https://facebook.com", label: "Facebook" },
   { icon: FiTwitter, href: "https://twitter.com", label: "Twitter" },
   { icon: FiYoutube, href: "https://youtube.com", label: "YouTube" },

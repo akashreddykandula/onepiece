@@ -46,10 +46,9 @@ export default function SEO({
           description:
             "Premium fashion brand in India offering clothing, oversized t-shirts, hoodies and custom print apparel.",
           email: "onepiece.fashion99@gmail.com",
-          //   sameAs: [
-          //     "https://instagram.com/YOUR_INSTAGRAM",
-          //     "https://facebook.com/YOUR_FACEBOOK",
-          //   ],
+          sameAs: [
+            "https://www.instagram.com/onepiece_fashion_in?igsh=MXA0bzFibnNvdzJ1Ng%3D%3D",
+          ],
         })}
       </script>
       <script type="application/ld+json">
