@@ -73,7 +73,7 @@ const paymentBadges = [
 const contactDetails = [
   {
     icon: FiMapPin,
-    text: "42 Fashion Street, Banjara Hills, Hyderabad – 500034",
+    text: "Besdie Clock Tower, VRC, Somasekara Puram, Nellore, Andhra Pradesh 524003",
   },
   {
     icon: FiPhone,
