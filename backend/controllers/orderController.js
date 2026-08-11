@@ -868,7 +868,7 @@ exports.downloadInvoice = async (req, res, next) => {
       .fillColor("#475569")
       .text("Premium Fashion Store", 48, startY + 38)
       .text(
-        "Besdie Clock Tower, VRC, Somasekara Puram, Nellore, Andhra Pradesh 524003",
+        "Beside Clock Tower, VRC, Somasekara Puram, Nellore, Andhra Pradesh 524003",
         48,
         startY + 50,
       )
