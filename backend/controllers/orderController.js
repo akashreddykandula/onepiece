@@ -867,7 +867,11 @@ exports.downloadInvoice = async (req, res, next) => {
       .fontSize(8.5)
       .fillColor("#475569")
       .text("Premium Fashion Store", 48, startY + 38)
-      .text("Hyderabad, Telangana, India", 48, startY + 50)
+      .text(
+        "Besdie Clock Tower, VRC, Somasekara Puram, Nellore, Andhra Pradesh 524003",
+        48,
+        startY + 50,
+      )
       .text("support@onepiece.com | www.onepiece.com", 48, startY + 62);
 
     // -- Customer Info --
