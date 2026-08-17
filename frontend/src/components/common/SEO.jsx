@@ -71,7 +71,7 @@ export default function SEO({
           name: "ONE PIECE",
           image: "https://onepiecefashion.in/favicon.jpeg",
           url: "https://onepiecefashion.in",
-          telephone: "+91-XXXXXXXXXX",
+          telephone: "+91-8121218099",
           email: "onepiece.fashion99@gmail.com",
           priceRange: "₹₹",
           address: {

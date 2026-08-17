@@ -31,6 +31,7 @@ export default function AdminProductForm() {
   const isEditing = !!id;
   const [images, setImages] = useState([]);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [uploadingColorIndex, setUploadingColorIndex] = useState(null);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [colors, setColors] = useState([]);
 
@@ -74,6 +75,7 @@ export default function AdminProductForm() {
   );
 
   const subcategories = selectedCategoryData?.subcategories || [];
+
   useEffect(() => {
     if (product) {
       reset({
@@ -107,7 +109,12 @@ export default function AdminProductForm() {
 
       setImages(product.images || []);
       setSelectedSizes(product.sizes || []);
-      setColors(product.colors || []);
+      setColors(
+        (product.colors || []).map((c) => ({
+          ...c,
+          images: c.images || [],
+        })),
+      );
     }
   }, [product, reset]);
 
@@ -115,25 +122,15 @@ export default function AdminProductForm() {
     mutationFn: (data) =>
       isEditing ? productAPI.update(id, data) : productAPI.create(data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["products"],
-      });
-
+      await queryClient.invalidateQueries({ queryKey: ["products"] });
       await queryClient.invalidateQueries({
         queryKey: ["product"],
         exact: false,
       });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["featured-products"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["new-arrivals"],
-      });
+      await queryClient.invalidateQueries({ queryKey: ["featured-products"] });
+      await queryClient.invalidateQueries({ queryKey: ["new-arrivals"] });
 
       toast.success(isEditing ? "Product updated!" : "Product created!");
-
       navigate("/admin/products");
     },
     onError: (err) => toast.error(err.response?.data?.message || "Save failed"),
@@ -158,6 +155,7 @@ export default function AdminProductForm() {
       toast.error("Upload failed");
     } finally {
       setUploadingImages(false);
+      e.target.value = "";
     }
   };
 
@@ -165,6 +163,7 @@ export default function AdminProductForm() {
     const files = e.target.files;
     if (!files?.length) return;
 
+    setUploadingColorIndex(colorIndex);
     try {
       const formData = new FormData();
       Array.from(files).forEach((file) => {
@@ -174,13 +173,15 @@ export default function AdminProductForm() {
       const res = await uploadAPI.images(formData, "products");
       const uploadedImages = res.data.images;
 
-      const updatedColors = [...colors];
-      updatedColors[colorIndex].images = [
-        ...(updatedColors[colorIndex].images || []),
-        ...uploadedImages,
-      ];
-
-      setColors(updatedColors);
+      setColors((prevColors) => {
+        const updated = [...prevColors];
+        const currentImages = updated[colorIndex]?.images || [];
+        updated[colorIndex] = {
+          ...updated[colorIndex],
+          images: [...currentImages, ...uploadedImages],
+        };
+        return updated;
+      });
 
       if (uploadedImages.length > 0) {
         setImages((prev) => {
@@ -195,7 +196,6 @@ export default function AdminProductForm() {
           );
 
           if (alreadyExists) return prev;
-
           return [...prev, firstImage];
         });
       }
@@ -203,6 +203,9 @@ export default function AdminProductForm() {
       toast.success("Color images uploaded");
     } catch {
       toast.error("Upload failed");
+    } finally {
+      setUploadingColorIndex(null);
+      e.target.value = "";
     }
   };
 
@@ -213,7 +216,7 @@ export default function AdminProductForm() {
     const updated = [...colors];
     const image = updated[colorIndex].images[imageIndex];
 
-    if (image.publicId) {
+    if (image?.publicId) {
       try {
         await uploadAPI.remove(image.publicId);
       } catch (err) {
@@ -221,7 +224,9 @@ export default function AdminProductForm() {
       }
     }
 
-    updated[colorIndex].images.splice(imageIndex, 1);
+    updated[colorIndex].images = updated[colorIndex].images.filter(
+      (_, idx) => idx !== imageIndex,
+    );
     setColors(updated);
   };
 
@@ -256,6 +261,7 @@ export default function AdminProductForm() {
     setSelectedSizes((prev) =>
       prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
     );
+
   const onSubmit = (data) => {
     mutation.mutate({
       ...data,
@@ -277,7 +283,6 @@ export default function AdminProductForm() {
       </Helmet>
 
       <form onSubmit={handleSubmit(onSubmit)} className="pb-12 pt-2 space-y-6">
-        {/* Header Block (Clean Header without Overflow Issues) */}
         <div className="flex items-center justify-between flex-wrap gap-4 pb-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <Link
@@ -315,7 +320,6 @@ export default function AdminProductForm() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Main Form Area */}
           <div className="lg:col-span-2 space-y-6">
             {/* Basic Information */}
             <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 space-y-5">
@@ -548,7 +552,7 @@ export default function AdminProductForm() {
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                 {images.map((img, i) => (
                   <div
-                    key={i}
+                    key={img.publicId || i}
                     className={`relative group rounded-xl overflow-hidden aspect-square border-2 transition-all bg-gray-100 ${
                       img.isPrimary
                         ? "border-brand-600 ring-2 ring-brand-500/20"
@@ -557,7 +561,7 @@ export default function AdminProductForm() {
                   >
                     <img
                       src={img.url}
-                      alt=""
+                      alt={img.alt || "Product"}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
@@ -590,7 +594,7 @@ export default function AdminProductForm() {
                 <label
                   className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${
                     uploadingImages
-                      ? "border-brand-400 bg-brand-50/50"
+                      ? "border-brand-400 bg-brand-50/50 pointer-events-none"
                       : "border-gray-300 hover:border-brand-500 hover:bg-gray-50/80"
                   }`}
                 >
@@ -603,7 +607,12 @@ export default function AdminProductForm() {
                     disabled={uploadingImages}
                   />
                   {uploadingImages ? (
-                    <div className="w-5 h-5 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
+                    <div className="flex flex-col items-center gap-1.5">
+                      <div className="w-5 h-5 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-[10px] text-brand-700 font-medium">
+                        Uploading…
+                      </span>
+                    </div>
                   ) : (
                     <>
                       <div className="p-2 rounded-full bg-gray-100 text-gray-500 mb-1">
@@ -661,7 +670,10 @@ export default function AdminProductForm() {
                 <button
                   type="button"
                   onClick={() =>
-                    setColors([...colors, { name: "", hex: "#000000" }])
+                    setColors([
+                      ...colors,
+                      { name: "", hex: "#000000", images: [] },
+                    ])
                   }
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-lg transition-colors cursor-pointer"
                 >
@@ -700,7 +712,7 @@ export default function AdminProductForm() {
                         <input
                           type="text"
                           placeholder="Color Name (e.g. Navy Blue)"
-                          value={color.name}
+                          value={color.name || ""}
                           onChange={(e) => {
                             const updated = [...colors];
                             updated[index].name = e.target.value;
@@ -712,7 +724,7 @@ export default function AdminProductForm() {
                         <div className="flex items-center gap-2">
                           <input
                             type="color"
-                            value={color.hex}
+                            value={color.hex || "#000000"}
                             onChange={(e) => {
                               const updated = [...colors];
                               updated[index].hex = e.target.value;
@@ -728,17 +740,17 @@ export default function AdminProductForm() {
 
                       <div className="pt-2 border-t border-gray-200/60">
                         <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                          Variant Gallery
+                          Variant Gallery ({(color.images || []).length})
                         </label>
                         <div className="flex items-center gap-2.5 flex-wrap">
                           {(color.images || []).map((img, i) => (
                             <div
-                              key={i}
+                              key={img.publicId || i}
                               className="relative group w-14 h-14 rounded-lg overflow-hidden border border-gray-200 bg-gray-100"
                             >
                               <img
                                 src={img.url}
-                                alt=""
+                                alt={img.alt || color.name || ""}
                                 className="w-full h-full object-cover"
                               />
                               <button
@@ -751,14 +763,30 @@ export default function AdminProductForm() {
                             </div>
                           ))}
 
-                          <label className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors">
-                            <FiUpload size={13} />
-                            <span>Upload</span>
+                          <label
+                            className={`inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors ${
+                              uploadingColorIndex === index
+                                ? "opacity-75 pointer-events-none bg-gray-50"
+                                : ""
+                            }`}
+                          >
+                            {uploadingColorIndex === index ? (
+                              <>
+                                <div className="w-3.5 h-3.5 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
+                                <span>Uploading…</span>
+                              </>
+                            ) : (
+                              <>
+                                <FiUpload size={13} />
+                                <span>Upload</span>
+                              </>
+                            )}
                             <input
                               type="file"
                               multiple
                               accept="image/*"
                               className="hidden"
+                              disabled={uploadingColorIndex === index}
                               onChange={(e) => handleColorImageUpload(e, index)}
                             />
                           </label>
@@ -770,7 +798,7 @@ export default function AdminProductForm() {
               )}
             </div>
 
-            {/* Fashion details */}
+            {/* Garment specifications */}
             <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 space-y-4">
               <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
                 <FiCheckCircle className="text-brand-600" size={18} />
@@ -887,7 +915,6 @@ export default function AdminProductForm() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Visibility Settings */}
             <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-5 space-y-4">
               <h2 className="font-semibold text-gray-900 text-sm pb-2 border-b border-gray-100">
                 Visibility & Badges
@@ -924,7 +951,6 @@ export default function AdminProductForm() {
               </div>
             </div>
 
-            {/* Returns */}
             <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-5 space-y-3">
               <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
                 <FiRotateCcw size={16} className="text-brand-600" />

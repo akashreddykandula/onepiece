@@ -137,7 +137,7 @@ export default function ProductDetailPage() {
 
   const p = productData;
   const images =
-    selectedColor?.images?.length > 1 ? selectedColor.images : p?.images || [];
+    selectedColor?.images?.length > 0 ? selectedColor.images : p?.images || [];
   const currentImg = images[selectedImage]?.url || images[0]?.url;
   const discount = p ? getDiscount(p.price, p.comparePrice) : 0;
   const wishlisted = p ? isWishlisted(p._id) : false;
@@ -564,7 +564,8 @@ export default function ProductDetailPage() {
                       title={c.name}
                       onClick={() => {
                         setSelectedColor(c);
-                        scrollToImage(0);
+                        setSelectedImage(0);
+                        setZoom(false);
                       }}
                       className={`relative w-8 h-8 rounded-full border-2 transition-all active:scale-95 ${
                         selectedColor?.name === c.name
