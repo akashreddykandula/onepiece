@@ -37,7 +37,7 @@ export default function AdminProductForm() {
 
   const { data: product, isLoading: productLoading } = useQuery({
     queryKey: ["product-edit", id],
-    queryFn: () => productAPI.getOne(id).then((r) => r.data.product),
+    queryFn: () => productAPI.getOneAdmin(id).then((r) => r.data.product),
     enabled: isEditing,
   });
 

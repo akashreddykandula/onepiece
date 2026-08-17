@@ -61,7 +61,9 @@ export const productAPI = {
     api.get("/products/search/suggestions", { params: { q } }),
   getRelated: (id) => api.get(`/products/${id}/related`),
   // Admin
+  // Admin
   getAllAdmin: (p) => api.get("/products/admin/all", { params: p }),
+  getOneAdmin: (id) => api.get(`/products/admin/${id}`),
   create: (data) => api.post("/products", data),
   update: (id, d) => api.put(`/products/${id}`, d),
   remove: (id) => api.delete(`/products/${id}`),

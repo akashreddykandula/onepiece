@@ -136,6 +136,21 @@ exports.getProduct = async (req, res, next) => {
   res.json({ success: true, product });
 };
 
+// GET /api/products/admin/:id
+exports.getProductAdmin = async (req, res, next) => {
+  const product = await Product.findById(req.params.id)
+    .populate("category", "name slug")
+    .populate("subcategory", "name slug");
+
+  if (!product) {
+    return next(new AppError("Product not found.", 404));
+  }
+
+  res.json({
+    success: true,
+    product,
+  });
+};
 // GET /api/products/featured
 exports.getFeaturedProducts = async (req, res) => {
   const { limit = 8 } = req.query;
@@ -250,7 +265,6 @@ exports.createProduct = async (req, res, next) => {
 
 // PUT /api/products/:id
 exports.updateProduct = async (req, res, next) => {
-
   const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
