@@ -73,7 +73,7 @@ const paymentBadges = [
 const contactDetails = [
   {
     icon: FiMapPin,
-    text: "Beside Clock Tower, , Somasekara Puram, Nellore, Andhra Pradesh 524003",
+    text: "Beside Clock Tower, VRC center, Somasekara Puram, Nellore, Andhra Pradesh 524003",
   },
   {
     icon: FiPhone,
