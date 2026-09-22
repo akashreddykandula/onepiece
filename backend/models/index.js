@@ -375,7 +375,41 @@ const printJobSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+// ─── Newsletter Subscriber ───────────────────────────────────────────────────
+const newsletterSubscriberSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
 
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    subscribedAt: {
+      type: Date,
+      default: Date.now,
+    },
+
+    unsubscribedAt: {
+      type: Date,
+      default: null,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+const NewsletterSubscriber = mongoose.model(
+  "NewsletterSubscriber",
+  newsletterSubscriberSchema,
+);
 module.exports = {
   Review: mongoose.model("Review", reviewSchema),
   Coupon: mongoose.model("Coupon", couponSchema),
@@ -384,4 +418,5 @@ module.exports = {
   CMS: mongoose.model("CMS", cmsSchema),
   Notification: mongoose.model("Notification", notificationSchema),
   PrintJob: mongoose.model("PrintJob", printJobSchema),
+  NewsletterSubscriber,
 };

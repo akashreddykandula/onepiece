@@ -15,7 +15,7 @@ import {
 } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import toast from "react-hot-toast";
-
+import { newsletterAPI } from "../../services/api";
 const footerLinks = {
   Shop: [
     { label: "Men's Collection", href: "/collections?category=men" },
@@ -98,9 +98,13 @@ export default function Footer() {
 
     setSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise((r) => setTimeout(r, 800));
-      toast.success("You are subscribed! Welcome to the ONE PIECE family 🎉");
+      const response = await newsletterAPI.subscribe(email.trim());
+
+      toast.success(
+        response?.data?.message ||
+          "You are subscribed! Welcome to the ONE PIECE family 🎉",
+      );
+
       setEmail("");
     } catch {
       toast.error("Subscription failed. Please try again.");

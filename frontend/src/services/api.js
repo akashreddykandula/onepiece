@@ -221,3 +221,6 @@ export const visitorAPI = {
 
   getCount: () => api.get("/visitors/count"),
 };
+export const newsletterAPI = {
+  subscribe: (email) => api.post("/newsletter/subscribe", { email }),
+};

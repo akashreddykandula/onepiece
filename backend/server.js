@@ -12,7 +12,7 @@ const compression = require("compression");
 const mongoSanitize = require("express-mongo-sanitize");
 const rateLimit = require("express-rate-limit");
 require("dotenv").config();
-
+const newsletterRoutes = require("./routes/newsletterRoutes");
 const { errorHandler, notFound } = require("./middleware/errorMiddleware");
 const allowedOrigins = [
   ...(process.env.CLIENT_URL || "")
@@ -159,6 +159,7 @@ app.get("/", (req, res) => {
 });
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/api/auth", authLimiter, require("./routes/authRoutes"));
+app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/products", require("./routes/productRoutes"));
 app.use("/api/categories", require("./routes/categoryRoutes"));

@@ -703,7 +703,48 @@ const emailService = {
       html,
     });
   },
+  async sendNewsletterSubscription(email) {
+    const adminEmail =
+      process.env.ADMIN_EMAIL || "onepiece.fashion99@gmail.com";
 
+    const html = baseTemplate(`
+      <span class="tag">📩 Newsletter Subscription</span>
+
+      <h2 style="font-size:22px;font-weight:800;color:${BLUE_DARK};margin:18px 0 12px;letter-spacing:-0.5px">
+        New Newsletter Subscriber
+      </h2>
+
+      <p style="font-size:14px;color:#475569;line-height:1.6;margin-bottom:24px">
+        A new customer has subscribed to the ONE PIECE newsletter.
+      </p>
+
+      <div class="card-box">
+        <table>
+          <tr class="info-row">
+            <td class="info-label">Email Address</td>
+            <td class="info-value">${email}</td>
+          </tr>
+
+          <tr class="info-row">
+            <td class="info-label">Subscribed At</td>
+            <td class="info-value">
+              ${new Date().toLocaleString("en-IN")}
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <p style="font-size:13px;color:#94A3B8;text-align:center;line-height:1.5">
+        This subscriber can now receive future ONE PIECE newsletter updates and offers.
+      </p>
+    `);
+
+    return sendEmail({
+      to: adminEmail,
+      subject: `📩 New Newsletter Subscriber - ${email}`,
+      html,
+    });
+  },
   async sendAdminCustomPrintPaid(order) {
     const adminEmail =
       process.env.ADMIN_EMAIL || "onepiece.fashion99@gmail.com";
