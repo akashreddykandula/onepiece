@@ -104,23 +104,32 @@ async function sendEmail({ to, subject, html }) {
       html,
     });
 
-    console.log("✅ Resend email sent:", {
+    console.log("📧 Resend response:", JSON.stringify(result, null, 2));
+
+    if (result?.error) {
+      console.error("❌ Resend rejected the email:", result.error);
+      throw new Error(result.error.message || "Resend rejected the email.");
+    }
+
+    const emailId = result?.data?.id || result?.id;
+
+    if (!emailId) {
+      console.error("❌ Resend returned no email ID:", result);
+      throw new Error("Resend returned no email ID.");
+    }
+
+    console.log("✅ Resend email sent successfully:", {
       to,
       subject,
-      id: result?.data?.id || result?.id || null,
+      id: emailId,
     });
 
     return result;
   } catch (error) {
     console.error("❌ Resend email failed:", error);
-    console.error(
-      "Resend error details:",
-      error?.response?.data || error?.message || error,
-    );
     throw error;
   }
 }
-
 const emailService = {
   async sendWelcome(user) {
     const html = baseTemplate(`
