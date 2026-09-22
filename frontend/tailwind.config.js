@@ -8,22 +8,22 @@ export default {
       },
       colors: {
         brand: {
-          50: "#EFF6FF",
-          100: "#DBEAFE",
-          200: "#BFDBFE",
-          300: "#93C5FD",
-          400: "#60A5FA",
-          500: "#3B82F6", // Electric Blue
-          600: "#2563EB",
-          700: "#1D4ED8",
-          800: "#0A5ACB", // Royal Blue
-          900: "#0A2A80", // Deep Navy
-          950: "#071B52",
+          50: "#fdf2f2",
+          100: "#fde6e6",
+          200: "#fbd0d0",
+          300: "#f7aab0",
+          400: "#f0757d",
+          500: "#e3383e", // Primary Accent Red
+          600: "#d02027",
+          700: "#be181e",
+          800: "#8e1c20", // Deep Red
+          900: "#b02429", // Base Crimson Red
+          950: "#48090b", // Deep Maroon
         },
         sky: {
-          accent: "#7AB2E4",
+          accent: "#e47a7d",
         },
-        ice: "#F7FAFC",
+        ice: "#FAFAFA",
         silver: "#94A3B8",
       },
       fontFamily: {
@@ -32,25 +32,25 @@ export default {
       },
       backgroundImage: {
         "brand-gradient":
-          "linear-gradient(135deg, #0A2A80 0%, #0A5ACB 50%, #3B82F6 100%)",
-        "brand-gradient-r": "linear-gradient(135deg, #3B82F6 0%, #0A5ACB 100%)",
+          "linear-gradient(135deg, #b02429 0%, #8e1c20 50%, #e3383e 100%)",
+        "brand-gradient-r": "linear-gradient(135deg, #e3383e 0%, #8e1c20 100%)",
         "hero-overlay":
-          "linear-gradient(180deg, rgba(10,42,128,0.6) 0%, rgba(10,42,128,0.3) 60%, rgba(10,42,128,0.7) 100%)",
+          "linear-gradient(180deg, rgba(176,36,41,0.6) 0%, rgba(176,36,41,0.3) 60%, rgba(176,36,41,0.7) 100%)",
         "card-shine":
           "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)",
         glass:
           "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)",
       },
       boxShadow: {
-        "brand-sm": "0 2px 8px rgba(10,90,203,0.15)",
-        brand: "0 4px 20px rgba(10,90,203,0.2)",
-        "brand-lg": "0 8px 40px rgba(10,90,203,0.25)",
-        "brand-xl": "0 16px 60px rgba(10,90,203,0.3)",
+        "brand-sm": "0 2px 8px rgba(176,36,41,0.15)",
+        brand: "0 4px 20px rgba(176,36,41,0.2)",
+        "brand-lg": "0 8px 40px rgba(176,36,41,0.25)",
+        "brand-xl": "0 16px 60px rgba(176,36,41,0.3)",
         card: "0 2px 16px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)",
         "card-hover": "0 8px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
         glass:
-          "0 8px 32px rgba(10,42,128,0.12), inset 0 1px 0 rgba(255,255,255,0.2)",
-        "inset-brand": "inset 0 0 0 2px #0A5ACB",
+          "0 8px 32px rgba(176,36,41,0.12), inset 0 1px 0 rgba(255,255,255,0.2)",
+        "inset-brand": "inset 0 0 0 2px #b02429",
       },
       animation: {
         shimmer: "shimmer 1.5s infinite",
@@ -84,8 +84,8 @@ export default {
           "100%": { transform: "scale(1)", opacity: 1 },
         },
         pulseBrand: {
-          "0%, 100%": { boxShadow: "0 0 0 0 rgba(10,90,203,0.4)" },
-          "50%": { boxShadow: "0 0 0 12px rgba(10,90,203,0)" },
+          "0%, 100%": { boxShadow: "0 0 0 0 rgba(176,36,41,0.4)" },
+          "50%": { boxShadow: "0 0 0 12px rgba(176,36,41,0)" },
         },
         bounceSoft: {
           "0%, 100%": { transform: "translateY(0)" },

@@ -97,8 +97,8 @@ export function RegisterPage() {
             className="w-full max-w-4xl bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-200/80 overflow-hidden grid grid-cols-1 md:grid-cols-5"
           >
             {/* Left Side Desktop Banner */}
-            <div className="hidden md:flex md:col-span-2 bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800 p-8 text-white flex-col justify-between relative overflow-hidden">
-              <div className="absolute -top-12 -left-12 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="hidden md:flex md:col-span-2 bg-gradient-to-br from-slate-950 via-brand-950 to-brand-900 p-8 text-white flex-col justify-between relative overflow-hidden">
+              <div className="absolute -top-12 -left-12 w-40 h-40 bg-brand-500/10 rounded-full blur-2xl pointer-events-none" />
 
               <div className="relative z-10">
                 <Link to="/">
@@ -110,7 +110,7 @@ export function RegisterPage() {
                 <h2 className="font-display font-bold text-2xl lg:text-3xl mb-2.5 leading-tight">
                   Already Registered?
                 </h2>
-                <p className="text-blue-200/90 text-xs max-w-xs mx-auto leading-relaxed mb-6 font-medium">
+                <p className="text-brand-100/90 text-xs max-w-xs mx-auto leading-relaxed mb-6 font-medium">
                   Log in to access your orders, saved addresses, and profile
                   details.
                 </p>
@@ -122,7 +122,7 @@ export function RegisterPage() {
                 </Link>
               </div>
 
-              <div className="text-[10px] text-blue-200/60 text-center relative z-10 font-medium">
+              <div className="text-[10px] text-brand-100/60 text-center relative z-10 font-medium">
                 © ONE PIECE Official Store
               </div>
             </div>
@@ -164,7 +164,7 @@ export function RegisterPage() {
                       className={`w-full bg-slate-50 border ${
                         errors.name
                           ? "border-red-400 focus:ring-red-100"
-                          : "border-slate-200 focus:border-blue-600 focus:ring-blue-100"
+                          : "border-slate-200 focus:border-brand-900 focus:ring-brand-100"
                       } rounded-xl py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-semibold text-slate-900 placeholder-slate-400 outline-none focus:ring-4 transition-all`}
                       placeholder="Your name"
                     />
@@ -195,7 +195,7 @@ export function RegisterPage() {
                       className={`w-full bg-slate-50 border ${
                         errors.email
                           ? "border-red-400 focus:ring-red-100"
-                          : "border-slate-200 focus:border-blue-600 focus:ring-blue-100"
+                          : "border-slate-200 focus:border-brand-900 focus:ring-brand-100"
                       } rounded-xl py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-semibold text-slate-900 placeholder-slate-400 outline-none focus:ring-4 transition-all`}
                       placeholder="your@gmail.com"
                     />
@@ -227,7 +227,7 @@ export function RegisterPage() {
                       className={`w-full bg-slate-50 border ${
                         errors.phone
                           ? "border-red-400 focus:ring-red-100"
-                          : "border-slate-200 focus:border-blue-600 focus:ring-blue-100"
+                          : "border-slate-200 focus:border-brand-900 focus:ring-brand-100"
                       } rounded-xl py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-semibold text-slate-900 placeholder-slate-400 outline-none focus:ring-4 transition-all`}
                       placeholder="10-Digit Mobile"
                       maxLength={10}
@@ -260,7 +260,7 @@ export function RegisterPage() {
                       className={`w-full bg-slate-50 border ${
                         errors.password
                           ? "border-red-400 focus:ring-red-100"
-                          : "border-slate-200 focus:border-blue-600 focus:ring-blue-100"
+                          : "border-slate-200 focus:border-brand-900 focus:ring-brand-100"
                       } rounded-xl py-2.5 pl-10 pr-10 text-xs sm:text-sm font-semibold text-slate-900 placeholder-slate-400 outline-none focus:ring-4 transition-all`}
                       placeholder="••••••••"
                     />
@@ -284,7 +284,7 @@ export function RegisterPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl py-3 text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-blue-500/20 active:scale-[0.99] transition-all ${
+                    className={`w-full bg-brand-900 hover:bg-brand-800 text-white font-bold rounded-xl py-3 text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-brand-900/20 active:scale-[0.99] transition-all ${
                       loading ? "opacity-70 cursor-not-allowed" : ""
                     }`}
                   >
@@ -304,14 +304,14 @@ export function RegisterPage() {
                 By registering you agree to our{" "}
                 <Link
                   to="/pages/terms"
-                  className="text-blue-600 hover:underline"
+                  className="text-brand-900 hover:underline font-semibold"
                 >
                   Terms
                 </Link>{" "}
                 &{" "}
                 <Link
                   to="/pages/privacy"
-                  className="text-blue-600 hover:underline"
+                  className="text-brand-900 hover:underline font-semibold"
                 >
                   Privacy Policy
                 </Link>
@@ -325,7 +325,7 @@ export function RegisterPage() {
                     to={`/login${
                       redirect !== "/" ? `?redirect=${redirect}` : ""
                     }`}
-                    className="text-blue-600 font-bold hover:underline"
+                    className="text-brand-900 font-bold hover:underline"
                   >
                     Sign In
                   </Link>
@@ -394,7 +394,7 @@ export function ForgotPasswordPage() {
               </span>
               <Link
                 to="/login"
-                className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-blue-600 font-bold transition-colors"
+                className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-brand-900 font-bold transition-colors"
               >
                 <FiArrowLeft size={14} /> Back
               </Link>
@@ -444,7 +444,7 @@ export function ForgotPasswordPage() {
                         className={`w-full bg-slate-50 border ${
                           errors.email
                             ? "border-red-400"
-                            : "border-slate-200 focus:border-blue-600 focus:ring-blue-100"
+                            : "border-slate-200 focus:border-brand-900 focus:ring-brand-100"
                         } rounded-xl py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-semibold text-slate-900 placeholder-slate-400 outline-none focus:ring-4 transition-all`}
                         placeholder="your@email.com"
                       />
@@ -459,7 +459,7 @@ export function ForgotPasswordPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl py-3 text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-blue-500/20 active:scale-[0.99] transition-all ${
+                    className={`w-full bg-brand-900 hover:bg-brand-800 text-white font-bold rounded-xl py-3 text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-brand-900/20 active:scale-[0.99] transition-all ${
                       loading ? "opacity-70" : ""
                     }`}
                   >
@@ -571,7 +571,7 @@ export function ResetPasswordPage() {
                         className={`w-full bg-slate-50 border ${
                           errors.password
                             ? "border-red-400"
-                            : "border-slate-200 focus:border-blue-600 focus:ring-blue-100"
+                            : "border-slate-200 focus:border-brand-900 focus:ring-brand-100"
                         } rounded-xl py-2.5 pl-10 pr-10 text-xs sm:text-sm font-semibold text-slate-900 placeholder-slate-400 outline-none focus:ring-4 transition-all`}
                         placeholder="Min 8 characters"
                       />
@@ -613,7 +613,7 @@ export function ResetPasswordPage() {
                         className={`w-full bg-slate-50 border ${
                           errors.confirmPassword
                             ? "border-red-400"
-                            : "border-slate-200 focus:border-blue-600 focus:ring-blue-100"
+                            : "border-slate-200 focus:border-brand-900 focus:ring-brand-100"
                         } rounded-xl py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-semibold text-slate-900 placeholder-slate-400 outline-none focus:ring-4 transition-all`}
                         placeholder="Repeat password"
                       />
@@ -628,7 +628,7 @@ export function ResetPasswordPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl py-3 text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-blue-500/20 active:scale-[0.99] transition-all ${
+                    className={`w-full bg-brand-900 hover:bg-brand-800 text-white font-bold rounded-xl py-3 text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-brand-900/20 active:scale-[0.99] transition-all ${
                       isSubmitting ? "opacity-70" : ""
                     }`}
                   >

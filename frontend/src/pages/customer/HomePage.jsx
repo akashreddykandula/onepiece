@@ -26,10 +26,11 @@ const TestimonialsSection = lazy(
 const InstagramGrid = lazy(() => import("@components/home/InstagramGrid"));
 import { ProductGridSkeleton } from "@components/ui/PageLoader";
 
-//announcement bar
+// Announcement bar
 const AnnouncementBar = lazy(
   () => import("@components/layout/AnnouncementBar"),
 );
+
 function SectionSkeleton() {
   return (
     <section className="section">
@@ -53,7 +54,6 @@ export default function HomePage() {
     queryKey: ["products", "featured"],
     queryFn: async () => {
       const res = await productAPI.getFeatured(8);
-
       return res.data.products;
     },
   });

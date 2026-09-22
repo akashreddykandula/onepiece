@@ -24,7 +24,7 @@ const DEFAULT_SLIDES = [
     image:
       "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     align: "left",
-    accentColor: "#3B82F6",
+    accentColor: "#b02429",
   },
   {
     id: 2,
@@ -38,7 +38,7 @@ const DEFAULT_SLIDES = [
     image:
       "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1600&q=85",
     align: "center",
-    accentColor: "#7AB2E4",
+    accentColor: "#e3383e",
   },
   {
     id: 3,
@@ -69,7 +69,7 @@ export default function HeroSlider({ banners = [] }) {
           image: b.image?.url,
           videoUrl: b.videoUrl,
           align: "left",
-          accentColor: "#3B82F6",
+          accentColor: "#b02429",
         }))
       : DEFAULT_SLIDES;
 
@@ -189,11 +189,11 @@ export default function HeroSlider({ banners = [] }) {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 }}
                   className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-bold tracking-[0.3em] uppercase mb-3 sm:mb-4"
-                  style={{ color: slide.accentColor || "#7AB2E4" }}
+                  style={{ color: slide.accentColor || "#b02429" }}
                 >
                   <span
                     className="w-6 sm:w-8 h-0.5"
-                    style={{ background: slide.accentColor || "#7AB2E4" }}
+                    style={{ background: slide.accentColor || "#b02429" }}
                   />
                   {slide.subtitle}
                 </motion.span>

@@ -126,7 +126,7 @@ export function LoginPage() {
                       className={`w-full bg-slate-50 border ${
                         errors.email
                           ? "border-red-400 focus:ring-red-100"
-                          : "border-slate-200 focus:border-blue-600 focus:ring-blue-100"
+                          : "border-slate-200 focus:border-brand-900 focus:ring-brand-100"
                       } rounded-xl py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-semibold text-slate-900 placeholder-slate-400 outline-none focus:ring-4 transition-all`}
                       placeholder="your@gmail.com"
                     />
@@ -146,7 +146,7 @@ export function LoginPage() {
                     </label>
                     <Link
                       to="/forgot-password"
-                      className="text-xs text-blue-600 hover:underline font-bold transition-colors"
+                      className="text-xs text-brand-900 hover:underline font-bold transition-colors"
                     >
                       Forgot Password?
                     </Link>
@@ -164,7 +164,7 @@ export function LoginPage() {
                       className={`w-full bg-slate-50 border ${
                         errors.password
                           ? "border-red-400 focus:ring-red-100"
-                          : "border-slate-200 focus:border-blue-600 focus:ring-blue-100"
+                          : "border-slate-200 focus:border-brand-900 focus:ring-brand-100"
                       } rounded-xl py-2.5 pl-10 pr-10 text-xs sm:text-sm font-semibold text-slate-900 placeholder-slate-400 outline-none focus:ring-4 transition-all`}
                       placeholder="••••••••"
                     />
@@ -188,7 +188,7 @@ export function LoginPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl py-3 text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-blue-500/20 active:scale-[0.99] transition-all ${
+                    className={`w-full bg-brand-900 hover:bg-brand-800 text-white font-bold rounded-xl py-3 text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-brand-900/20 active:scale-[0.99] transition-all ${
                       loading ? "opacity-70 cursor-not-allowed" : ""
                     }`}
                   >
@@ -204,7 +204,7 @@ export function LoginPage() {
                 </div>
               </form>
 
-              {/* Mobile Mobile Sign Up Link */}
+              {/* Mobile Sign Up Link */}
               <div className="mt-5 pt-4 border-t border-slate-100 text-center md:hidden">
                 <p className="text-xs text-slate-500 font-medium">
                   Don't have an account?{" "}
@@ -212,7 +212,7 @@ export function LoginPage() {
                     to={`/register${
                       redirect !== "/" ? `?redirect=${redirect}` : ""
                     }`}
-                    className="text-blue-600 font-bold hover:underline"
+                    className="text-brand-900 font-bold hover:underline"
                   >
                     Create Account
                   </Link>
@@ -221,8 +221,8 @@ export function LoginPage() {
             </div>
 
             {/* Right Side Desktop Banner */}
-            <div className="hidden md:flex md:col-span-2 bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800 p-8 text-white flex-col justify-between relative overflow-hidden order-1 md:order-2">
-              <div className="absolute -top-12 -right-12 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="hidden md:flex md:col-span-2 bg-gradient-to-br from-slate-950 via-brand-950 to-brand-900 p-8 text-white flex-col justify-between relative overflow-hidden order-1 md:order-2">
+              <div className="absolute -top-12 -right-12 w-40 h-40 bg-brand-500/10 rounded-full blur-2xl pointer-events-none" />
 
               <div className="relative z-10">
                 <Link to="/">
@@ -234,7 +234,7 @@ export function LoginPage() {
                 <h2 className="font-display font-bold text-2xl lg:text-3xl mb-2.5 leading-tight">
                   New to ONE PIECE?
                 </h2>
-                <p className="text-blue-200/90 text-xs max-w-xs mx-auto leading-relaxed mb-6 font-medium">
+                <p className="text-brand-100/90 text-xs max-w-xs mx-auto leading-relaxed mb-6 font-medium">
                   Join us today to unlock exclusive rewards, order tracking, and
                   fast checkout.
                 </p>
@@ -248,7 +248,7 @@ export function LoginPage() {
                 </Link>
               </div>
 
-              <div className="text-[10px] text-blue-200/60 text-center relative z-10 font-medium">
+              <div className="text-[10px] text-brand-100/60 text-center relative z-10 font-medium">
                 © ONE PIECE Official Store
               </div>
             </div>

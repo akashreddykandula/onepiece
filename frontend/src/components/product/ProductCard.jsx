@@ -139,7 +139,7 @@ export default function ProductCard({ product, index = 0 }) {
           </div>
         </Link>
 
-        {/* --- DESKTOP SLIDING ARROWS (Plain Black Arrows) --- */}
+        {/* --- DESKTOP SLIDING ARROWS --- */}
         <AnimatePresence>
           {orderedImages.length > 1 && isHovered && (
             <div className="hidden sm:flex absolute inset-x-2 top-1/2 -translate-y-1/2 justify-between pointer-events-none z-20">
@@ -191,7 +191,7 @@ export default function ProductCard({ product, index = 0 }) {
         ) : product.isBestSeller || product.isNewArrival ? (
           <span
             className={`absolute top-2 left-2 z-10 px-2 py-0.5 rounded text-white text-[9px] font-bold uppercase tracking-wider backdrop-blur-xs ${
-              product.isBestSeller ? "bg-amber-600/90" : "bg-emerald-600/90"
+              product.isBestSeller ? "bg-amber-600/90" : "bg-brand-900/90"
             }`}
           >
             {product.isBestSeller ? "Best Seller" : "New"}
@@ -207,7 +207,7 @@ export default function ProductCard({ product, index = 0 }) {
               quickAdded
                 ? "bg-emerald-600 text-white"
                 : product.isInStock
-                  ? "bg-gray-900/90 hover:bg-black text-white backdrop-blur-xs"
+                  ? "bg-brand-900 hover:bg-brand-800 text-white backdrop-blur-xs"
                   : "bg-gray-200 text-gray-400 cursor-not-allowed"
             }`}
           >
@@ -236,7 +236,7 @@ export default function ProductCard({ product, index = 0 }) {
 
         {/* Title */}
         <Link to={`/product/${product.slug}`} className="block">
-          <h3 className="text-xs sm:text-sm font-medium text-gray-800 line-clamp-1 group-hover:text-black transition-colors capitalize">
+          <h3 className="text-xs sm:text-sm font-medium text-gray-800 line-clamp-1 group-hover:text-brand-900 transition-colors capitalize">
             {product.name}
           </h3>
         </Link>
@@ -251,7 +251,7 @@ export default function ProductCard({ product, index = 0 }) {
                 onClick={() => setSelectedColor(color)}
                 className={`w-2.5 h-2.5 rounded-full border border-black/10 transition-transform ${
                   selectedColor?.name === color.name
-                    ? "scale-125 ring-1 ring-black"
+                    ? "scale-125 ring-1 ring-brand-900"
                     : "hover:scale-110"
                 }`}
                 style={{ backgroundColor: color.hex || "#ccc" }}
@@ -274,7 +274,7 @@ export default function ProductCard({ product, index = 0 }) {
             )}
 
             {discount > 0 && (
-              <span className="text-[9px] font-bold text-rose-600">
+              <span className="text-[9px] font-bold text-brand-900">
                 {discount}% OFF
               </span>
             )}
@@ -286,8 +286,8 @@ export default function ProductCard({ product, index = 0 }) {
               aria-label="Wishlist"
               className={`p-1 rounded-full transition-colors ${
                 wishlisted
-                  ? "text-rose-500"
-                  : "text-gray-400 hover:text-rose-500 hover:bg-gray-50"
+                  ? "text-brand-900"
+                  : "text-gray-400 hover:text-brand-900 hover:bg-brand-50"
               }`}
             >
               <FiHeart
