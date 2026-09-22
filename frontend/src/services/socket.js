@@ -13,9 +13,7 @@ export const socket = io(SOCKET_URL, {
   reconnectionDelay: 1000,
 });
 
-socket.on("connect", () => {
-  console.log("✅ Socket Connected:", socket.id);
-});
+socket.on("connect", () => {});
 
 socket.on("disconnect", (reason) => {
   console.log("❌ Socket Disconnected:", reason);
