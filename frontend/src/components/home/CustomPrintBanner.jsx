@@ -130,34 +130,204 @@ export default function CustomPrintBanner() {
 
 // ─── Stats Section ────────────────────────────────────────────────────────────
 const stats = [
-  { value: 50000, suffix: "+", label: "Happy Customers", icon: "😊" },
-  { value: 500, suffix: "+", label: "Unique Styles", icon: "👗" },
-  { value: 98, suffix: "%", label: "Satisfaction Rate", icon: "⭐" },
-  { value: 5, suffix: "K+", label: "Custom Prints", icon: "🎨" },
+  {
+    value: 50000,
+    suffix: "+",
+    label: "Happy Customers",
+    icon: (
+      <svg viewBox="0 0 64 64" fill="none" className="w-10 h-10">
+        <circle
+          cx="32"
+          cy="32"
+          r="23"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          opacity="0.25"
+        />
+        <path
+          d="M20 39c0-5.2 4.2-9.5 9.5-9.5h5c5.2 0 9.5 4.3 9.5 9.5"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M15 35c0-3.7 2.8-6.5 6.5-6.5"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+        />
+        <path
+          d="M49 35c0-3.7-2.8-6.5-6.5-6.5"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+
+  {
+    value: 500,
+    suffix: "+",
+    label: "Unique Styles",
+    icon: (
+      <svg viewBox="0 0 64 64" fill="none" className="w-10 h-10">
+        <path
+          d="M22 20l10-5 10 5 6 12-7 4-3-6v19H26V30l-3 6-7-4 6-12z"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+
+        <path
+          d="M27 19c1.3 3 3 4.5 5 4.5s3.7-1.5 5-4.5"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M26 49h12"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+
+  {
+    value: 98,
+    suffix: "%",
+    label: "Satisfaction Rate",
+    icon: (
+      <svg viewBox="0 0 64 64" fill="none" className="w-10 h-10">
+        <path
+          d="M32 14l5.3 10.8 11.9 1.7-8.6 8.4 2 11.8L32 41.1l-10.6 5.6 2-11.8-8.6-8.4 11.9-1.7L32 14z"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+
+        <path
+          d="M27 33l3.5 3.5L38 29"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
+
+  {
+    value: 5,
+    suffix: "K+",
+    label: "Custom Prints",
+    icon: (
+      <svg viewBox="0 0 64 64" fill="none" className="w-10 h-10">
+        <path
+          d="M20 27h24v20H20V27z"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+
+        <path
+          d="M25 27v-5h14v5"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M25 35h14"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M29 40h6"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M45 17v7M41.5 20.5h7"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
 ];
 
 function StatItem({ value, suffix, label, icon }) {
   const { count, ref } = useCountUp(value, 1800);
+
   return (
-    <div ref={ref} className="text-center p-2">
-      <div className="text-2xl sm:text-3xl mb-1.5">{icon}</div>
-      <div className="font-display font-black text-2xl sm:text-3xl md:text-5xl text-brand-900 tracking-tight">
-        {count.toLocaleString("en-IN")}
-        {suffix}
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6 }}
+      className="group relative"
+    >
+      <div className="relative flex flex-col items-center text-center px-4 py-6">
+        {/* Decorative SVG */}
+        <div className="relative mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-50 via-white to-brand-100 text-brand-600 transition-all duration-500 group-hover:scale-110 group-hover:shadow-lg">
+          <div className="absolute inset-0 rounded-full border border-brand-200/60" />
+
+          <div className="absolute inset-1 rounded-full border border-brand-100" />
+
+          <div className="relative z-10">{icon}</div>
+        </div>
+
+        {/* Number */}
+        <div className="flex items-baseline justify-center">
+          <span className="font-display text-4xl sm:text-5xl md:text-6xl font-black tracking-[-0.04em] text-brand-900">
+            {count.toLocaleString("en-IN")}
+          </span>
+
+          <span className="ml-1 text-xl sm:text-2xl font-bold text-brand-500">
+            {suffix}
+          </span>
+        </div>
+
+        {/* Label */}
+        <p className="mt-2 text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] text-gray-400">
+          {label}
+        </p>
+
+        {/* Decorative line */}
+        <div className="mt-5 flex items-center gap-2">
+          <span className="h-px w-5 bg-brand-200 transition-all duration-300 group-hover:w-8" />
+
+          <span className="h-1 w-1 rounded-full bg-brand-500" />
+
+          <span className="h-px w-5 bg-brand-200 transition-all duration-300 group-hover:w-8" />
+        </div>
       </div>
-      <p className="text-xs sm:text-sm text-gray-500 mt-1 font-medium leading-tight">
-        {label}
-      </p>
-    </div>
+    </motion.div>
   );
 }
 
 export function StatsSection() {
   return (
-    <section className="py-8 md:py-12 bg-white border-y border-gray-100">
-      <div className="container-op px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 md:gap-6">
-          {stats.map((s) => (
+    <section className="relative overflow-hidden bg-white py-12 md:py-16 border-y border-gray-100">
+      {/* Background decoration */}
+      <div className="pointer-events-none absolute -left-24 top-1/2 h-48 w-48 -translate-y-1/2 rounded-full bg-brand-50/70 blur-3xl" />
+
+      <div className="pointer-events-none absolute -right-24 top-1/2 h-48 w-48 -translate-y-1/2 rounded-full bg-brand-50/70 blur-3xl" />
+
+      <div className="container-op relative px-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-100">
+          {stats.map((s, index) => (
             <StatItem key={s.label} {...s} />
           ))}
         </div>
