@@ -89,7 +89,9 @@ async function sendEmail({ to, subject, html }) {
       html,
     });
   } catch (error) {
-    console.error(error);
+    console.error("❌ Resend email failed:", error);
+    console.error("Resend error details:", error?.response?.data || error);
+    throw error;
   }
 }
 
