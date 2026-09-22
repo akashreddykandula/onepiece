@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
+import { registerVisitor } from "@utils/visitor";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
@@ -218,6 +219,9 @@ function AppContent() {
 }
 
 export default function App() {
+  useEffect(() => {
+    registerVisitor();
+  }, []);
   return (
     <ErrorBoundary>
       <AppContent />

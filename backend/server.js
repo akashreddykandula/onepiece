@@ -175,6 +175,7 @@ app.use("/api/print", require("./routes/printRoutes"));
 app.use("/api/analytics", require("./routes/analyticsRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/api/custom-print", require("./routes/customPrintRoutes"));
+app.use("/api/visitors", require("./routes/visitorRoutes"));
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {

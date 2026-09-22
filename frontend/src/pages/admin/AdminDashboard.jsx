@@ -11,7 +11,7 @@ import {
   FiAlertCircle,
   FiRefreshCw,
 } from "react-icons/fi";
-import { analyticsAPI } from "@services/api";
+import { analyticsAPI, visitorAPI } from "@services/api";
 import { formatPrice, formatDate, getOrderStatusConfig } from "@utils/helpers";
 import PageLoader from "@components/ui/PageLoader";
 
@@ -80,6 +80,11 @@ export default function AdminDashboard() {
     staleTime: 1000 * 60 * 2,
     refetchInterval: 1000 * 60 * 5,
   });
+  const { data: visitorData } = useQuery({
+    queryKey: ["visitor-count"],
+    queryFn: () => visitorAPI.getCount().then((r) => r.data),
+    refetchInterval: 1000 * 30,
+  });
 
   if (isLoading) return <PageLoader />;
 
@@ -116,6 +121,13 @@ export default function AdminDashboard() {
       icon: FiUsers,
       color: "bg-green-500",
       linkTo: "/admin/customers",
+    },
+    {
+      title: "Visitors",
+      value: (visitorData?.totalVisitors || 0).toLocaleString(),
+      sub: "Unique website visitors",
+      icon: FiUsers,
+      color: "bg-blue-500",
     },
     {
       title: "Products",
@@ -164,7 +176,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-5">
           {statCards.map((s, i) => (
             <motion.div
               key={s.title}

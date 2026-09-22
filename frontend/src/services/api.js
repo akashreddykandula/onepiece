@@ -216,3 +216,8 @@ export const cmsAPI = {
   getAllAdmin: () => api.get("/cms"),
   upsert: (slug, d) => api.put(`/cms/${slug}`, d),
 };
+export const visitorAPI = {
+  register: (visitorId) => api.post("/visitors/register", { visitorId }),
+
+  getCount: () => api.get("/visitors/count"),
+};
