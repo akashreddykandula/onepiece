@@ -231,13 +231,92 @@ returnSchema.pre("save", function (next) {
 // ─── CMS Page ─────────────────────────────────────────────────────────────────
 const cmsSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true, trim: true },
-    slug: { type: String, unique: true, required: true, lowercase: true },
-    content: { type: String, required: true },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    slug: {
+      type: String,
+      unique: true,
+      required: true,
+      lowercase: true,
+    },
+
+    // Legacy HTML content.
+    // Kept so existing CMS pages continue working.
+    content: {
+      type: String,
+      default: "",
+    },
+
+    // New structured CMS content.
+    blocks: {
+      type: [
+        {
+          type: {
+            type: String,
+            required: true,
+            enum: [
+              "hero",
+              "text",
+              "info",
+              "checklist",
+              "faq",
+              "imageText",
+              "notice",
+              "contact",
+            ],
+          },
+
+          title: {
+            type: String,
+            default: "",
+          },
+
+          subtitle: {
+            type: String,
+            default: "",
+          },
+
+          content: {
+            type: String,
+            default: "",
+          },
+
+          image: {
+            type: String,
+            default: "",
+          },
+
+          items: {
+            type: [String],
+            default: [],
+          },
+
+          order: {
+            type: Number,
+            default: 0,
+          },
+        },
+      ],
+      default: [],
+    },
+
     metaTitle: String,
+
     metaDescription: String,
-    isActive: { type: Boolean, default: true },
-    lastEditedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    lastEditedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   { timestamps: true },
 );

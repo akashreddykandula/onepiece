@@ -6,6 +6,7 @@ import { FiEdit2, FiCheck, FiX, FiEye } from "react-icons/fi";
 import { cmsAPI } from "@services/api";
 import { formatDate } from "@utils/helpers";
 import PageLoader from "@components/ui/PageLoader";
+import CMSBlockEditor from "@components/admin/CMSBlockEditor";
 import toast from "react-hot-toast";
 
 const DEFAULT_PAGES = [
@@ -24,6 +25,7 @@ export default function AdminCMS() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState(null);
   const [content, setContent] = useState("");
+  const [blocks, setBlocks] = useState([]);
   const [title, setTitle] = useState("");
 
   const { data, isLoading } = useQuery({
@@ -44,9 +46,15 @@ export default function AdminCMS() {
 
   const openEdit = (page) => {
     const existing = data?.find((p) => p.slug === page.slug);
-    setEditing({ slug: page.slug, title: page.title });
+
+    setEditing({
+      slug: page.slug,
+      title: page.title,
+    });
+
     setTitle(existing?.title || page.title);
     setContent(existing?.content || "");
+    setBlocks(existing?.blocks || []);
   };
 
   const pagesMap = new Map((data || []).map((p) => [p.slug, p]));
@@ -98,18 +106,7 @@ export default function AdminCMS() {
               />
             </div>
             <div>
-              <label className="label">Content (HTML supported)</label>
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="input resize-y font-mono text-sm"
-                style={{ minHeight: "320px" }}
-                placeholder="<h2>Your content here</h2><p>Supports HTML formatting</p>"
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                Supports HTML. Use &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;a&gt;
-                tags for formatting.
-              </p>
+              <CMSBlockEditor blocks={blocks} onChange={setBlocks} />
             </div>
             <div className="flex gap-3">
               <button
@@ -117,6 +114,7 @@ export default function AdminCMS() {
                   saveMutation.mutate({
                     title,
                     content,
+                    blocks,
                     slug: editing.slug,
                     isActive: true,
                   })

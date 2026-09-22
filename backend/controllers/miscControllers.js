@@ -654,25 +654,83 @@ exports.updateReturnStatus = async (req, res, next) => {
 };
 
 // ─── CMS ──────────────────────────────────────────────────────────────────────
+// ─── CMS ──────────────────────────────────────────────────────────────────────
 exports.getCMSPage = async (req, res, next) => {
-  const page = await CMS.findOne({ slug: req.params.slug, isActive: true });
-  if (!page) return next(new AppError("Page not found.", 404));
-  res.json({ success: true, page });
+  const page = await CMS.findOne({
+    slug: req.params.slug,
+    isActive: true,
+  });
+
+  if (!page) {
+    return next(new AppError("Page not found.", 404));
+  }
+
+  res.json({
+    success: true,
+    page,
+  });
 };
 
 exports.getAllCMSPages = async (req, res) => {
-  const pages = await CMS.find().sort({ updatedAt: -1 });
-  res.json({ success: true, pages });
+  const pages = await CMS.find().sort({ updatedAt: -1 }).lean();
+
+  res.json({
+    success: true,
+    pages,
+  });
 };
 
-exports.upsertCMSPage = async (req, res) => {
-  const { slug } = req.params;
-  const page = await CMS.findOneAndUpdate(
-    { slug },
-    { ...req.body, lastEditedBy: req.user._id },
-    { new: true, upsert: true, runValidators: true },
-  );
-  res.json({ success: true, page });
+exports.upsertCMSPage = async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+
+    const { title, content, blocks, metaTitle, metaDescription, isActive } =
+      req.body;
+
+    const updateData = {
+      lastEditedBy: req.user._id,
+    };
+
+    if (title !== undefined) {
+      updateData.title = title;
+    }
+
+    // Keep legacy HTML content supported.
+    if (content !== undefined) {
+      updateData.content = content;
+    }
+
+    // New structured CMS blocks.
+    if (blocks !== undefined) {
+      updateData.blocks = Array.isArray(blocks) ? blocks : [];
+    }
+
+    if (metaTitle !== undefined) {
+      updateData.metaTitle = metaTitle;
+    }
+
+    if (metaDescription !== undefined) {
+      updateData.metaDescription = metaDescription;
+    }
+
+    if (isActive !== undefined) {
+      updateData.isActive = Boolean(isActive);
+    }
+
+    const page = await CMS.findOneAndUpdate({ slug }, updateData, {
+      new: true,
+      upsert: true,
+      runValidators: true,
+      setDefaultsOnInsert: true,
+    });
+
+    res.json({
+      success: true,
+      page,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // ─── Notifications ────────────────────────────────────────────────────────────
