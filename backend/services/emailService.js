@@ -1,4 +1,5 @@
 "use strict";
+
 const { Resend } = require("resend");
 
 const resend = process.env.RESEND_API_KEY
@@ -11,6 +12,15 @@ const BLUE_DARK = "#0A2A80";
 const BLUE_PRIMARY = "#0A5ACB";
 const BLUE_ELECTRIC = "#3B82F6";
 
+// Helper to escape potentially unsafe HTML strings
+const escapeHtml = (str) =>
+  String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
 const fmt = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const appUrl = () => {
   console.log("CLIENT_URL =", process.env.CLIENT_URL);
@@ -19,23 +29,24 @@ const appUrl = () => {
 
 const baseTemplate = (content) => `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
   <title>ONE PIECE</title>
-  <style>
+  <style type="text/css">
     /* Global Reset */
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F1F5F9; color: #0F172A; -webkit-font-smoothing: antialiased; line-height: 1.6; }
-    table { border-collapse: collapse; width: 100%; }
-    img { max-width: 100%; height: auto; display: block; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F1F5F9; color: #0F172A; -webkit-font-smoothing: antialiased; line-height: 1.6; margin: 0; padding: 0; }
+    table { border-collapse: collapse; width: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { max-width: 100%; height: auto; display: block; border: 0; outline: none; text-decoration: none; }
     
     .outer-table { width: 100%; background-color: #F1F5F9; padding: 40px 10px; }
     .wrapper { max-width: 600px; margin: 0 auto; background: #FFFFFF; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 30px -10px rgba(10, 42, 128, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03); border: 1px solid #E2E8F0; }
     .header { background: linear-gradient(135deg, ${BLUE_DARK} 0%, ${BLUE_PRIMARY} 100%); padding: 44px 32px; text-align: center; }
-    .logo { font-size: 32px; font-weight: 900; color: #FFFFFF; letter-spacing: 5px; line-height: 1; }
+    .logo { font-size: 32px; font-weight: 900; color: #FFFFFF; letter-spacing: 5px; line-height: 1; text-transform: uppercase; }
     .logo span { color: #7AB2E4; }
     .tagline { font-size: 10px; color: rgba(255, 255, 255, 0.75); letter-spacing: 3px; text-transform: uppercase; margin-top: 8px; font-weight: 600; }
     .body { background: #FFFFFF; padding: 40px 36px; }
@@ -78,19 +89,34 @@ const baseTemplate = (content) => `
 </html>`;
 
 async function sendEmail({ to, subject, html }) {
-  if (!resend) return;
+  if (!resend) {
+    throw new Error(
+      "RESEND_API_KEY is missing. Please configure RESEND_API_KEY in the backend environment variables.",
+    );
+  }
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM,
       to,
       replyTo: REPLY_TO,
       subject,
       html,
     });
+
+    console.log("✅ Resend email sent:", {
+      to,
+      subject,
+      id: result?.data?.id || result?.id || null,
+    });
+
+    return result;
   } catch (error) {
     console.error("❌ Resend email failed:", error);
-    console.error("Resend error details:", error?.response?.data || error);
+    console.error(
+      "Resend error details:",
+      error?.response?.data || error?.message || error,
+    );
     throw error;
   }
 }
@@ -98,7 +124,7 @@ async function sendEmail({ to, subject, html }) {
 const emailService = {
   async sendWelcome(user) {
     const html = baseTemplate(`
-      <h2 style="font-size:24px;font-weight:800;color:${BLUE_DARK};margin-bottom:12px;letter-spacing:-0.5px">Welcome, ${user.name}! 👋</h2>
+      <h2 style="font-size:24px;font-weight:800;color:${BLUE_DARK};margin-bottom:12px;letter-spacing:-0.5px">Welcome, ${escapeHtml(user.name)}! 👋</h2>
       <p style="color:#475569;font-size:15px;line-height:1.6;margin-bottom:24px">
         You've just joined ONE PIECE — India's premium fashion destination. Discover thousands of curated styles, custom prints, and exclusive collections made just for you.
       </p>
@@ -128,20 +154,20 @@ const emailService = {
       <table>
         <tr class="info-row">
           <td class="info-label">Name</td>
-          <td class="info-value">${user.name}</td>
+          <td class="info-value">${escapeHtml(user.name)}</td>
         </tr>
         <tr class="info-row">
           <td class="info-label">Email</td>
-          <td class="info-value">${user.email}</td>
+          <td class="info-value">${escapeHtml(user.email)}</td>
         </tr>
         <tr class="info-row">
           <td class="info-label">Phone</td>
-          <td class="info-value">${user.phone || "-"}</td>
+          <td class="info-value">${escapeHtml(user.phone || "-")}</td>
         </tr>
         <tr class="info-row">
           <td class="info-label">Registered</td>
           <td class="info-value">
-            ${new Date(user.createdAt).toLocaleString("en-IN")}
+            ${user.createdAt ? new Date(user.createdAt).toLocaleString("en-IN") : new Date().toLocaleString("en-IN")}
           </td>
         </tr>
       </table>
@@ -165,7 +191,7 @@ const emailService = {
     const recipient = order.shippingAddress?.email || order.guestInfo?.email;
     if (!recipient) return;
 
-    const itemsHtml = order.items
+    const itemsHtml = (order.items || [])
       .map(
         (item) => `
       <tr>
@@ -173,11 +199,11 @@ const emailService = {
           <table style="width:100%">
             <tr>
               <td style="width:68px;vertical-align:top">
-                <img src="${item.image}" width="68" height="82" style="object-fit:cover;border-radius:8px;border:1px solid #E2E8F0;display:block" />
+                <img src="${item.image}" width="68" height="82" style="object-fit:cover;border-radius:8px;border:1px solid #E2E8F0;display:block" alt="${escapeHtml(item.name)}" />
               </td>
               <td style="padding-left:16px;vertical-align:top">
-                <p style="font-weight:700;font-size:14px;color:#0F172A;margin-bottom:4px;line-height:1.3">${item.name}</p>
-                <p style="font-size:12px;color:#64748B;margin-bottom:6px">Qty: ${item.quantity}${item.size ? ` · Size: ${item.size}` : ""}${item.color ? ` · Color: ${item.color}` : ""}</p>
+                <p style="font-weight:700;font-size:14px;color:#0F172A;margin-bottom:4px;line-height:1.3">${escapeHtml(item.name)}</p>
+                <p style="font-size:12px;color:#64748B;margin-bottom:6px">Qty: ${item.quantity}${item.size ? ` · Size: ${escapeHtml(item.size)}` : ""}${item.color ? ` · Color: ${escapeHtml(item.color)}` : ""}</p>
                 <p style="font-size:14px;font-weight:800;color:${BLUE_PRIMARY}">${fmt(item.price * item.quantity)}</p>
               </td>
             </tr>
@@ -191,24 +217,24 @@ const emailService = {
     const html = baseTemplate(`
       <span class="tag">Order Confirmed ✓</span>
       <h2 style="font-size:22px;font-weight:800;color:${BLUE_DARK};margin:18px 0 4px;letter-spacing:-0.5px">Order #${order.orderNumber}</h2>
-      <p style="font-size:14px;color:#64748B;margin-bottom:24px">Thank you, ${order.shippingAddress?.name}! We've received your order.</p>
+      <p style="font-size:14px;color:#64748B;margin-bottom:24px">Thank you, ${escapeHtml(order.shippingAddress?.name || "Customer")}! We've received your order.</p>
       
       <table style="width:100%;margin-bottom:12px">${itemsHtml}</table>
 
       <div class="card-box" style="padding:16px 20px">
         <table>
-          <tr class="info-row"><td class="info-label">Subtotal</td><td class="info-value">${fmt(order.pricing.subtotal)}</td></tr>
-          ${order.pricing.couponDiscount > 0 ? `<tr class="info-row"><td class="info-label">Coupon Discount</td><td class="info-value" style="color:#16A34A">-${fmt(order.pricing.couponDiscount)}</td></tr>` : ""}
-          <tr class="info-row"><td class="info-label">Shipping</td><td class="info-value">${order.pricing.shippingCost === 0 ? '<span style="color:#16A34A;font-weight:700">FREE</span>' : fmt(order.pricing.shippingCost)}</td></tr>
-          <tr class="info-row"><td class="info-label">GST (${order.pricing.gstPercentage}%)</td><td class="info-value">${fmt(order.pricing.gst)}</td></tr>
-          <tr class="info-row" style="border-top:2px solid #E2E8F0;border-bottom:none"><td style="font-size:15px;font-weight:700;color:#0F172A;padding-top:12px">Total</td><td style="font-size:18px;font-weight:800;color:${BLUE_PRIMARY};padding-top:12px;text-align:right">${fmt(order.pricing.total)}</td></tr>
+          <tr class="info-row"><td class="info-label">Subtotal</td><td class="info-value">${fmt(order.pricing?.subtotal)}</td></tr>
+          ${order.pricing?.couponDiscount > 0 ? `<tr class="info-row"><td class="info-label">Coupon Discount</td><td class="info-value" style="color:#16A34A">-${fmt(order.pricing.couponDiscount)}</td></tr>` : ""}
+          <tr class="info-row"><td class="info-label">Shipping</td><td class="info-value">${order.pricing?.shippingCost === 0 ? '<span style="color:#16A34A;font-weight:700">FREE</span>' : fmt(order.pricing?.shippingCost)}</td></tr>
+          <tr class="info-row"><td class="info-label">GST (${order.pricing?.gstPercentage || 0}%)</td><td class="info-value">${fmt(order.pricing?.gst)}</td></tr>
+          <tr class="info-row" style="border-top:2px solid #E2E8F0;border-bottom:none"><td style="font-size:15px;font-weight:700;color:#0F172A;padding-top:12px">Total</td><td style="font-size:18px;font-weight:800;color:${BLUE_PRIMARY};padding-top:12px;text-align:right">${fmt(order.pricing?.total)}</td></tr>
         </table>
       </div>
 
       <div style="background:#F1F5F9;border-radius:12px;padding:18px 20px;margin-bottom:20px;border:1px solid #E2E8F0">
         <p style="font-size:12px;color:#475569;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:6px">Delivery Address</p>
-        <p style="font-size:14px;color:#0F172A;line-height:1.5;font-weight:600">${order.shippingAddress.name}</p>
-        <p style="font-size:13px;color:#64748B;line-height:1.4;margin-top:2px">${order.shippingAddress.line1}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.pincode}</p>
+        <p style="font-size:14px;color:#0F172A;line-height:1.5;font-weight:600">${escapeHtml(order.shippingAddress?.name || "")}</p>
+        <p style="font-size:13px;color:#64748B;line-height:1.4;margin-top:2px">${escapeHtml(order.shippingAddress?.line1 || "")}, ${escapeHtml(order.shippingAddress?.city || "")}, ${escapeHtml(order.shippingAddress?.state || "")} - ${escapeHtml(order.shippingAddress?.pincode || "")}</p>
         <p style="font-size:13px;color:#16A34A;font-weight:700;margin-top:12px">📦 Expected delivery: ${order.tracking?.estimatedDelivery ? new Date(order.tracking.estimatedDelivery).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "Within 7 business days"}</p>
       </div>
 
@@ -244,13 +270,13 @@ const emailService = {
       <h2 style="font-size:22px;font-weight:800;color:${BLUE_DARK};margin:18px 0 6px;letter-spacing:-0.5px">Your order has been ${label.toLowerCase()}</h2>
       <p style="font-size:14px;color:#64748B;margin-bottom:20px">Order #${order.orderNumber}</p>
       
-      ${message ? `<div style="background:#EFF6FF;padding:18px 20px;border-radius:12px;font-size:14px;color:#1E40AF;border-left:4px solid ${BLUE_PRIMARY};margin-bottom:20px;line-height:1.6">${message}</div>` : ""}
+      ${message ? `<div style="background:#EFF6FF;padding:18px 20px;border-radius:12px;font-size:14px;color:#1E40AF;border-left:4px solid ${BLUE_PRIMARY};margin-bottom:20px;line-height:1.6">${escapeHtml(message)}</div>` : ""}
       
       ${
         order.tracking?.trackingNumber
           ? `<div class="card-box" style="text-align:center">
               <p style="font-size:11px;color:#64748B;text-transform:uppercase;letter-spacing:1px;font-weight:700">Tracking Information</p>
-              <p style="font-size:16px;font-weight:700;color:#0F172A;margin-top:4px">${order.tracking.trackingNumber} ${order.tracking.courier ? `<span style="font-weight:500;color:#64748B">via ${order.tracking.courier}</span>` : ""}</p>
+              <p style="font-size:16px;font-weight:700;color:#0F172A;margin-top:4px">${escapeHtml(order.tracking.trackingNumber)}${order.tracking.courier ? `<span style="font-weight:500;color:#64748B">via ${escapeHtml(order.tracking.courier)}</span>` : ""}</p>
             </div>`
           : ""
       }
@@ -268,7 +294,7 @@ const emailService = {
   async sendPasswordReset(user, resetUrl) {
     const html = baseTemplate(`
       <h2 style="font-size:22px;font-weight:800;color:${BLUE_DARK};margin-bottom:12px;letter-spacing:-0.5px">Reset Your Password 🔐</h2>
-      <p style="font-size:14px;color:#475569;line-height:1.6;margin-bottom:24px">Hi ${user.name},<br>We received a request to reset your ONE PIECE account password. Click the button below — this link expires in 30 minutes.</p>
+      <p style="font-size:14px;color:#475569;line-height:1.6;margin-bottom:24px">Hi ${escapeHtml(user.name)},<br>We received a request to reset your ONE PIECE account password. Click the button below — this link expires in 30 minutes.</p>
       <center><a class="btn" href="${resetUrl}">Reset Password</a></center>
       <hr class="divider">
       <p style="font-size:12px;color:#94A3B8;text-align:center;line-height:1.5">If you didn't request this, ignore this email. Your password will remain unchanged.<br>For security, never share this link with anyone.</p>
@@ -283,6 +309,7 @@ const emailService = {
   async sendShippingNotification(order) {
     const recipient = order.shippingAddress?.email || order.guestInfo?.email;
     if (!recipient) return;
+
     const html = baseTemplate(`
       <span class="tag">🚚 Order Shipped</span>
       <h2 style="font-size:22px;font-weight:800;color:${BLUE_DARK};margin:18px 0 6px;letter-spacing:-0.5px">Your order is on its way!</h2>
@@ -292,8 +319,7 @@ const emailService = {
           ? `
         <div style="background:linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);padding:24px;border-radius:14px;text-align:center;border:1px solid #BFDBFE;margin-bottom:24px">
           <p style="font-size:11px;color:#1E40AF;letter-spacing:1.5px;text-transform:uppercase;font-weight:800">Tracking Details</p>
-          <p style="font-size:26px;font-weight:900;color:${BLUE_PRIMARY};margin:8px 0;letter-spacing:1px">${order.tracking.trackingNumber}</p>
-          ${order.tracking.courier ? `<p style="font-size:13px;color:#1E3A8A;font-weight:600">Shipped via <strong>${order.tracking.courier}</strong></p>` : ""}
+          <p style="font-size:26px;font-weight:900;color:${BLUE_PRIMARY};margin:8px 0;letter-spacing:1px">${escapeHtml(order.tracking.trackingNumber)}</p>${order.tracking.courier ? `<p style="font-size:13px;color:#1E3A8A;font-weight:600">Shipped via <strong>${escapeHtml(order.tracking.courier)}</strong></p>` : ""}
         </div>`
           : ""
       }
@@ -310,11 +336,11 @@ const emailService = {
     const html = baseTemplate(`
       <span class="tag">🎁 Exclusive Offer</span>
       <h2 style="font-size:22px;font-weight:800;color:${BLUE_DARK};margin:18px 0 8px;letter-spacing:-0.5px">A Special Gift Just For You</h2>
-      <p style="font-size:14px;color:#475569;margin-bottom:24px">Hi ${user.name}, use this exclusive coupon code on your next purchase:</p>
+      <p style="font-size:14px;color:#475569;margin-bottom:24px">Hi ${escapeHtml(user.name)}, use this exclusive coupon code on your next purchase:</p>
       
       <div style="background:linear-gradient(135deg,${BLUE_DARK},${BLUE_PRIMARY});border-radius:16px;padding:32px 24px;text-align:center;box-shadow:0 10px 20px rgba(10,42,128,0.18)">
         <p style="font-size:11px;color:rgba(255,255,255,0.75);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:8px;font-weight:700">Your Coupon Code</p>
-        <p style="font-size:36px;font-weight:900;color:#FFFFFF;letter-spacing:6px;font-family:monospace;margin:6px 0">${coupon.code}</p>
+        <p style="font-size:36px;font-weight:900;color:#FFFFFF;letter-spacing:6px;font-family:monospace;margin:6px 0">${escapeHtml(coupon.code)}</p>
         <p style="font-size:15px;color:#FFFFFF;margin-top:10px;font-weight:600">
           ${coupon.discountType === "percentage" ? `${coupon.discountValue}% OFF` : `Flat ₹${coupon.discountValue} OFF`}
           ${coupon.minOrderAmount ? `<span style="font-weight:400;opacity:0.85"> (Min. Order ₹${coupon.minOrderAmount})</span>` : ""}
@@ -354,29 +380,29 @@ const emailService = {
       <table>
         <tr class="info-row">
           <td class="info-label">Customer</td>
-          <td class="info-value">${customer}</td>
+          <td class="info-value">${escapeHtml(customer)}</td>
         </tr>
         <tr class="info-row">
           <td class="info-label">Email</td>
-          <td class="info-value">${recipient}</td>
+          <td class="info-value">${escapeHtml(recipient)}</td>
         </tr>
         <tr class="info-row">
           <td class="info-label">Phone</td>
-          <td class="info-value">${phone}</td>
+          <td class="info-value">${escapeHtml(phone)}</td>
         </tr>
         <tr class="info-row">
           <td class="info-label">Payment</td>
           <td class="info-value" style="color:${order.paymentStatus === "paid" ? "#16A34A" : "#D97706"}">
-            ${(order.paymentInfo?.status || order.paymentStatus || "Pending").toUpperCase()}
+            ${escapeHtml((order.paymentInfo?.status || order.paymentStatus || "Pending").toUpperCase())}
           </td>
         </tr>
         <tr class="info-row">
           <td class="info-label">Items</td>
-          <td class="info-value">${order.items.length}</td>
+          <td class="info-value">${order.items?.length || 0}</td>
         </tr>
         <tr class="info-row">
           <td class="info-label">Order Total</td>
-          <td class="info-value" style="color:${BLUE_PRIMARY}">${fmt(order.pricing.total)}</td>
+          <td class="info-value" style="color:${BLUE_PRIMARY}">${fmt(order.pricing?.total)}</td>
         </tr>
       </table>
     </div>
@@ -419,19 +445,19 @@ const emailService = {
         </tr>
         <tr class="info-row">
           <td class="info-label">Customer</td>
-          <td class="info-value">${customer}</td>
+          <td class="info-value">${escapeHtml(customer)}</td>
         </tr>
         <tr class="info-row">
           <td class="info-label">Email</td>
-          <td class="info-value">${email}</td>
+          <td class="info-value">${escapeHtml(email)}</td>
         </tr>
         <tr class="info-row">
           <td class="info-label">Amount Paid</td>
-          <td class="info-value" style="color:#16A34A">${fmt(order.pricing.total)}</td>
+          <td class="info-value" style="color:#16A34A">${fmt(order.pricing?.total)}</td>
         </tr>
         <tr class="info-row">
           <td class="info-label">Payment Method</td>
-          <td class="info-value">${order.paymentInfo?.method?.toUpperCase() || "ONLINE"}</td>
+          <td class="info-value">${escapeHtml(order.paymentInfo?.method?.toUpperCase() || "ONLINE")}</td>
         </tr>
       </table>
     </div>
@@ -463,14 +489,14 @@ const emailService = {
     const html = baseTemplate(`
       <span class="tag">Custom Print Received ✓</span>
       <h2 style="font-size:22px;font-weight:800;color:${BLUE_DARK};margin:18px 0 6px;letter-spacing:-0.5px">We've received your Request!</h2>
-      <p style="font-size:14px;color:#64748B;margin-bottom:24px">Hi ${order.customerName || "Customer"}, our design team is reviewing your customization details.</p>
+      <p style="font-size:14px;color:#64748B;margin-bottom:24px">Hi ${escapeHtml(order.customerName || "Customer")}, our design team is reviewing your customization details.</p>
       
       <div class="card-box">
         <table>
-          <tr class="info-row"><td class="info-label">Print Area</td><td class="info-value">${order.selectedPrintArea || "Standard"}</td></tr>
-          <tr class="info-row"><td class="info-label">Side</td><td class="info-value">${order.selectedSide || "Front"}</td></tr>
+          <tr class="info-row"><td class="info-label">Print Area</td><td class="info-value">${escapeHtml(order.selectedPrintArea || "Standard")}</td></tr>
+          <tr class="info-row"><td class="info-label">Side</td><td class="info-value">${escapeHtml(order.selectedSide || "Front")}</td></tr>
           <tr class="info-row"><td class="info-label">Quantity</td><td class="info-value">${order.quantity}</td></tr>
-          ${order.printText ? `<tr class="info-row"><td class="info-label">Custom Text</td><td class="info-value">${order.printText}</td></tr>` : ""}
+          ${order.printText ? `<tr class="info-row"><td class="info-label">Custom Text</td><td class="info-value">${escapeHtml(order.printText)}</td></tr>` : ""}
         </table>
       </div>
 
@@ -494,7 +520,7 @@ const emailService = {
     const html = baseTemplate(`
       <span class="tag">🖼️ Design Preview Ready</span>
       <h2 style="font-size:22px;font-weight:800;color:${BLUE_DARK};margin:18px 0 6px;letter-spacing:-0.5px">Your Preview is Ready!</h2>
-      <p style="font-size:14px;color:#475569;margin-bottom:20px">Hi ${order.customerName || "Customer"}, our design team has uploaded a proof for your review.</p>
+      <p style="font-size:14px;color:#475569;margin-bottom:20px">Hi ${escapeHtml(order.customerName || "Customer")}, our design team has uploaded a proof for your review.</p>
       
       ${previewImg ? `<center style="margin:20px 0;"><img src="${previewImg}" style="max-width:100%;border-radius:12px;box-shadow:0 8px 16px rgba(0,0,0,0.06);border:1px solid #E2E8F0;" alt="Preview Proof"/></center>` : ""}
       
@@ -528,7 +554,7 @@ const emailService = {
       case "Modification Requested":
         badge = "✏️ Modification Requested";
         title = "Modification Request Received";
-        message = `We have received your feedback: <em style="color:#0F172A;">"${order.customerFeedback || "No additional comments"}"</em>. Our team will update the design and notify you shortly.`;
+        message = `We have received your feedback: <em style="color:#0F172A;">"${escapeHtml(order.customerFeedback || "No additional comments")}"</em>. Our team will update the design and notify you shortly.`;
         break;
       case "Rejected":
         badge = "❌ Design Rejected";
@@ -561,7 +587,7 @@ const emailService = {
     const html = baseTemplate(`
       <span class="tag">💳 Payment Pending</span>
       <h2 style="font-size:22px;font-weight:800;color:${BLUE_DARK};margin:18px 0 8px;letter-spacing:-0.5px">Complete Payment to Start Production</h2>
-      <p style="font-size:14px;color:#475569;line-height:1.6;margin-bottom:20px">Hi ${order.customerName || "Customer"}, your custom print proof was approved! Please finalize your payment of <strong>${fmt(order.quotedPrice)}</strong> so we can move your order into production.</p>
+      <p style="font-size:14px;color:#475569;line-height:1.6;margin-bottom:20px">Hi ${escapeHtml(order.customerName || "Customer")}, your custom print proof was approved! Please finalize your payment of <strong>${fmt(order.quotedPrice)}</strong> so we can move your order into production.</p>
       <center><a class="btn" href="${appUrl()}/custom-print/${order._id}/pay">Pay ${fmt(order.quotedPrice)}</a></center>
     `);
 
@@ -655,11 +681,11 @@ const emailService = {
       
       <div class="card-box">
         <table>
-          <tr class="info-row"><td class="info-label">Customer</td><td class="info-value">${order.customerName || "N/A"}</td></tr>
-          <tr class="info-row"><td class="info-label">Email</td><td class="info-value">${order.customerEmail || "N/A"}</td></tr>
-          <tr class="info-row"><td class="info-label">Phone</td><td class="info-value">${order.customerPhone || "N/A"}</td></tr>
+          <tr class="info-row"><td class="info-label">Customer</td><td class="info-value">${escapeHtml(order.customerName || "N/A")}</td></tr>
+          <tr class="info-row"><td class="info-label">Email</td><td class="info-value">${escapeHtml(order.customerEmail || "N/A")}</td></tr>
+          <tr class="info-row"><td class="info-label">Phone</td><td class="info-value">${escapeHtml(order.customerPhone || "N/A")}</td></tr>
           <tr class="info-row"><td class="info-label">Quantity</td><td class="info-value">${order.quantity}</td></tr>
-          <tr class="info-row"><td class="info-label">Print Area</td><td class="info-value">${order.selectedPrintArea || "Standard"}</td></tr>
+          <tr class="info-row"><td class="info-label">Print Area</td><td class="info-value">${escapeHtml(order.selectedPrintArea || "Standard")}</td></tr>
         </table>
       </div>
 
@@ -690,10 +716,10 @@ const emailService = {
       
       <div class="card-box">
         <table>
-          <tr class="info-row"><td class="info-label">Customer</td><td class="info-value">${order.customerName || "N/A"}</td></tr>
-          <tr class="info-row"><td class="info-label">Decision</td><td class="info-value">${order.customerDecision}</td></tr>
+          <tr class="info-row"><td class="info-label">Customer</td><td class="info-value">${escapeHtml(order.customerName || "N/A")}</td></tr>
+          <tr class="info-row"><td class="info-label">Decision</td><td class="info-value">${escapeHtml(order.customerDecision)}</td></tr>
         </table>
-        ${order.customerFeedback ? `<div style="margin-top:12px;padding-top:12px;border-top:1px dashed #E2E8F0;"><p style="font-size:12px;color:#64748B;margin-bottom:4px;font-weight:600">Feedback:</p><p style="font-size:14px;color:#0F172A;font-style:italic">"${order.customerFeedback}"</p></div>` : ""}
+        ${order.customerFeedback ? `<div style="margin-top:12px;padding-top:12px;border-top:1px dashed #E2E8F0;"><p style="font-size:12px;color:#64748B;margin-bottom:4px;font-weight:600">Feedback:</p><p style="font-size:14px;color:#0F172A;font-style:italic">"${escapeHtml(order.customerFeedback)}"</p></div>` : ""}
       </div>
 
       <center><a class="btn" href="${appUrl()}/admin/custom-prints/${order._id}">View Order in Admin Panel</a></center>
@@ -705,6 +731,7 @@ const emailService = {
       html,
     });
   },
+
   async sendNewsletterSubscription(email) {
     const adminEmail =
       process.env.ADMIN_EMAIL || "onepiece.fashion99@gmail.com";
@@ -724,7 +751,7 @@ const emailService = {
         <table>
           <tr class="info-row">
             <td class="info-label">Email Address</td>
-            <td class="info-value">${email}</td>
+            <td class="info-value">${escapeHtml(email)}</td>
           </tr>
 
           <tr class="info-row">
@@ -747,6 +774,7 @@ const emailService = {
       html,
     });
   },
+
   async sendAdminCustomPrintPaid(order) {
     const adminEmail =
       process.env.ADMIN_EMAIL || "onepiece.fashion99@gmail.com";
@@ -762,11 +790,11 @@ const emailService = {
       <table>
         <tr class="info-row">
           <td class="info-label">Customer</td>
-          <td class="info-value">${order.customerName}</td>
+          <td class="info-value">${escapeHtml(order.customerName)}</td>
         </tr>
         <tr class="info-row">
           <td class="info-label">Email</td>
-          <td class="info-value">${order.customerEmail}</td>
+          <td class="info-value">${escapeHtml(order.customerEmail)}</td>
         </tr>
         <tr class="info-row">
           <td class="info-label">Amount Paid</td>
