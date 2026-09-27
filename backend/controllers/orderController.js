@@ -449,10 +449,7 @@ exports.cancelOrder = async (req, res, next) => {
     }
 
     // Only restore stock if the order was paid/confirmed (stock was actually reduced)
-    if (
-      order.paymentInfo.status === "paid" ||
-      order.orderStatus !== "pending"
-    ) {
+    if (order.paymentInfo.status === "paid") {
       for (const item of order.items) {
         if (item.variant) {
           await Product.findOneAndUpdate(
