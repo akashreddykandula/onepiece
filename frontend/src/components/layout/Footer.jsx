@@ -12,6 +12,7 @@ import {
   FiArrowUpRight,
   FiLock,
   FiCheckCircle,
+  FiWatch,
 } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import toast from "react-hot-toast";
@@ -54,9 +55,9 @@ const socials = [
     href: "https://www.instagram.com/onepiece_fashion_in?igsh=MXA0bzFibnNvdzJ1Ng%3D%3D",
     label: "Instagram",
   },
-  { icon: FiFacebook, href: "https://facebook.com", label: "Facebook" },
-  { icon: FiTwitter, href: "https://twitter.com", label: "Twitter" },
-  { icon: FiYoutube, href: "https://youtube.com", label: "YouTube" },
+  // { icon: FiFacebook, href: "https://facebook.com", label: "Facebook" },
+  // { icon: FiTwitter, href: "https://twitter.com", label: "Twitter" },
+  // { icon: FiYoutube, href: "https://youtube.com", label: "YouTube" },
   { icon: FaWhatsapp, href: "https://wa.me/918121218099", label: "WhatsApp" },
 ];
 
