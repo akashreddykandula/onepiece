@@ -139,16 +139,16 @@ export default function Navbar() {
             </div>
 
             {/* Center Section: Brand Logo */}
+            {/* Center Section: Brand Logo */}
             <Link
               to="/"
-              className="flex flex-col items-center group shrink-0 min-w-0"
+              className="flex items-center justify-center group shrink-0"
             >
-              <span className="font-display font-black text-3xl sm:text-3xl md:text-4xl text-brand-900 leading-none tracking-tight whitespace-nowrap group-hover:text-brand-800 transition-colors">
-                ONE<span className="text-brand-500">PIECE</span>
-              </span>
-              <span className="text-[8px] tracking-[0.3em] uppercase text-silver font-sans hidden md:block -mt-0.5">
-                Your Statement. Your Style.
-              </span>
+              <img
+                src="/onepiece-logo.png"
+                alt="ONE PIECE"
+                className="w-40 h-20 md:w-44 md:h-20 object-contain"
+              />
             </Link>
 
             {/* Right Action Icons */}
@@ -329,14 +329,13 @@ export default function Navbar() {
                 <Link
                   to="/"
                   onClick={() => setMobileOpen(false)}
-                  className="flex flex-col group"
+                  className="flex items-center group"
                 >
-                  <span className="font-display font-black text-2xl text-brand-900 leading-none tracking-tight">
-                    ONE<span className="text-brand-500">PIECE</span>
-                  </span>
-                  <span className="text-[7.5px] tracking-[0.28em] uppercase text-gray-400 font-sans mt-0.5">
-                    Your Statement. Your Style.
-                  </span>
+                  <img
+                    src="/onepiece-logo.png"
+                    alt="ONE PIECE"
+                    className="w-28 h-14 object-contain"
+                  />
                 </Link>
 
                 <button

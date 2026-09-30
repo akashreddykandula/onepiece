@@ -219,7 +219,7 @@ export const SHOP_MENU = [
       },
       {
         label: "Jackets",
-        href: "/collections?category=women&subcategory=jackets",
+        href: "/collections?category=women&subcategory=Jackets",
       },
     ],
   },
