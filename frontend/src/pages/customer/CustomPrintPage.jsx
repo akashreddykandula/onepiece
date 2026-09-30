@@ -795,7 +795,7 @@ export default function CustomPrintPage() {
                               break;
 
                             default:
-                              setDesignPosition({ x: 0, y: 0 });
+                              setDesignPosition({ x: 45, y: 0 });
                           }
                         }}
                         className={`px-3 py-2.5 rounded-xl text-xs font-semibold border-2 transition-all ${

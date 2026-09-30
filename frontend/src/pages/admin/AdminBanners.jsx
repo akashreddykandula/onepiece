@@ -163,15 +163,12 @@ export default function AdminBanners() {
               className="grid md:grid-cols-2 gap-4"
             >
               <div>
-                <label className="label">Title *</label>
+                <label className="label">Title</label>
                 <input
-                  {...register("title", { required: "Title required" })}
-                  className={`input ${errors.title ? "input-error" : ""}`}
+                  {...register("title")}
+                  className="input"
                   placeholder="Banner headline"
                 />
-                {errors.title && (
-                  <p className="error-msg">{errors.title.message}</p>
-                )}
               </div>
               <div>
                 <label className="label">Subtitle</label>
